@@ -1,0 +1,142 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\CustomerSalesSystem\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Customer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Domain\\Entities\\Customer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Product.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Domain\\Entities\\Product.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Sale.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Domain\\Entities\\Sale.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\DependencyInjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:CustomerSalesSystem.Infrastructure\\DependencyInjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Product.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Product.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Domain\\Entities\\Product.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Product.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Domain\\Entities\\Product.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAKAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:43:27.393Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Sale.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Sale.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Domain\\Entities\\Sale.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Sale.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Domain\\Entities\\Sale.cs",
+              "ViewState": "AQIAAAgAAAAAAAAAAAAkwBwAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:38:52.758Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Customer.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Customer.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Domain\\Entities\\Customer.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Domain\\Entities\\Customer.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Domain\\Entities\\Customer.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:37:48.637Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Infrastructure\\Persistence\\AppDbContext.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAAA4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:21:34.457Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DapperContext.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:25:27.288Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "DependencyInjection.cs",
+              "DocumentMoniker": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\DependencyInjection.cs",
+              "RelativeDocumentMoniker": "CustomerSalesSystem.Infrastructure\\DependencyInjection.cs",
+              "ToolTip": "E:\\CustomerSalesSystem\\CustomerSalesSystem.Infrastructure\\DependencyInjection.cs",
+              "RelativeToolTip": "CustomerSalesSystem.Infrastructure\\DependencyInjection.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T17:22:38.078Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

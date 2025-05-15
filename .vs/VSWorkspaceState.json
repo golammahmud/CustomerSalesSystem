@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\CustomerSalesSystem.Domain\\Entities",
+    "\\CustomerSalesSystem.Infrastructure",
+    "\\CustomerSalesSystem.Infrastructure\\Dapper",
+    "\\CustomerSalesSystem.Infrastructure\\Persistence"
+  ],
+  "SelectedNode": "\\CustomerSalesSystem.Infrastructure\\Dapper\\DapperContext.cs",
+  "PreviewInSolutionExplorer": false
+}
