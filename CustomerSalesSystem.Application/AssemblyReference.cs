@@ -1,7 +1,4 @@
 ﻿namespace CustomerSalesSystem.Application
 {
-    public class Class1
-    {
-
-    }
+    public static class AssemblyReference { }
 }

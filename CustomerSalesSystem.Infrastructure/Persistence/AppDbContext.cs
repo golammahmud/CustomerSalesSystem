@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using CustomerSalesSystem.Domain.Entities;
+﻿using CustomerSalesSystem.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace CustomerSalesSystem.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
@@ -8,4 +10,10 @@ public class AppDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Sale> Sales => Set<Sale>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        // Fluent API configs if needed
+    }
 }

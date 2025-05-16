@@ -1,4 +1,7 @@
-﻿namespace CustomerSalesSystem.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CustomerSalesSystem.Domain.Entities;
 
 public class Product
 {

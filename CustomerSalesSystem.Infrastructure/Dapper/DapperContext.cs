@@ -1,17 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using System.Data;
-using Microsoft.Data.SqlClient;
 
-public class DapperContext
+namespace CustomerSalesSystem.Infrastructure
 {
-    private readonly IConfiguration _configuration;
-    private readonly string _connectionString;
-
-    public DapperContext(IConfiguration configuration)
+    public class DapperContext
     {
-        _configuration = configuration;
-        _connectionString = _configuration.GetConnectionString("DefaultConnection");
-    }
+        private readonly IConfiguration _configuration;
+        private readonly string _connectionString;
 
-    public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
+        public DapperContext(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _connectionString = _configuration.GetConnectionString("DefaultConnection")!;
+        }
+
+        public IDbConnection CreateConnection()
+            => new SqlConnection(_connectionString);
+    }
 }

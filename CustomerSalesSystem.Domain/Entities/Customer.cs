@@ -1,4 +1,6 @@
-﻿namespace CustomerSalesSystem.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CustomerSalesSystem.Domain.Entities
 {
     public class Customer
     {
