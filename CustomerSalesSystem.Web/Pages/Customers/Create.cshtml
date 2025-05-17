@@ -1,0 +1,54 @@
+﻿@page
+@model CustomerSalesSystem.Web.Pages.Customers.CreateModel
+@{
+    ViewData["Title"] = "Add Customer";
+}
+
+<h2>Add New Customer</h2>
+
+<div class="row  justify-content-center">
+    <div class="col-md-6 card justify-content-center shadow-sm p-3">
+        <form id="customerForm" method="post">
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input asp-for="Customer.Name" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input asp-for="Customer.Email" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input asp-for="Customer.Phone" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { customerAPI } from '/js/api.js'; // adjust path if needed
+
+        document.querySelector('#customerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const customer = {
+                name: document.querySelector('[name="Customer.Name"]').value,
+                email: document.querySelector('[name="Customer.Email"]').value,
+                phone: document.querySelector('[name="Customer.Phone"]').value
+            };
+            console.log(customer);
+            try {
+                await customerAPI.create(customer);
+                window.location.href = '/Customers';
+            } catch (err) {
+                alert("Error adding customer.");
+            }
+        });
+    </script>
+}

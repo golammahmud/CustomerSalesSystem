@@ -24,4 +24,8 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="CustomerSalesSystem.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

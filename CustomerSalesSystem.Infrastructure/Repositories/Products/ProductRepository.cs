@@ -1,9 +1,4 @@
-﻿using CustomerSalesSystem.Domain.Entities;
-using CustomerSalesSystem.Domain.Interfaces;
-using CustomerSalesSystem.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-
-namespace CustomerSalesSystem.Infrastructure.Repositories.Products
+﻿namespace CustomerSalesSystem.Infrastructure.Repositories
 {
     public class ProductRepository : IProductRepository
     {

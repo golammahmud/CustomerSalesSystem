@@ -2,10 +2,16 @@ using CustomerSalesSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient("API", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7120/api/");
+});
 
-builder.Services.AddHttpClient<CustomerService>(c => c.BaseAddress = new Uri("https://localhost:5001/"));
-builder.Services.AddHttpClient<ProductService>(c => c.BaseAddress = new Uri("https://localhost:5001/"));
-builder.Services.AddHttpClient<SaleService>(c => c.BaseAddress = new Uri("https://localhost:5001/"));
+
+
+builder.Services.AddHttpClient<CustomerService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
+builder.Services.AddHttpClient<ProductService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
+builder.Services.AddHttpClient<SaleService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -28,5 +34,11 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/Customers");
+    return Task.CompletedTask;
+});
 
+app.MapControllers();
 app.Run();

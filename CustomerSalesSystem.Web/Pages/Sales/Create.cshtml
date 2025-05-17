@@ -1,0 +1,95 @@
+﻿@page
+@model CustomerSalesSystem.Web.Pages.Sales.CreateModel
+@{
+    ViewData["Title"] = "Create Sale";
+}
+
+<h2>Create Sale</h2>
+
+<div class="row  justify-content-center">
+    <div class="col-md-6 card justify-content-center shadow-sm p-3">
+        <form id="saleForm">
+            <div class="mb-3">
+                <label for="customerId" class="form-label">Customer</label>
+                <select class="form-select" id="customerId" required>
+                    <option value="">Select customer</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="productId" class="form-label">Product</label>
+                <select class="form-select" id="productId" required>
+                    <option value="">Select product</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" min="1" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="saleDate" class="form-label">Sale Date</label>
+                <input type="date" class="form-control" id="saleDate" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Sale</button>
+            <a asp-page="@PageNavigation.SalesList" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+<div id="message" class="mt-3"></div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { salesAPI } from '/js/api.js';
+        import { customerAPI } from '/js/api.js';
+        import { productAPI } from '/js/api.js';
+
+
+        async function loadCustomers() {
+            const res = await customerAPI.getAll();
+            const select = document.getElementById('customerId');
+            res.data.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadProducts() {
+            const res = await productAPI.getAll();
+            const select = document.getElementById('productId');
+            res.data.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('saleForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const data = {
+                customerId: document.getElementById('customerId').value,
+                productId: document.getElementById('productId').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                saleDate: document.getElementById('saleDate').value
+            };
+
+            try {
+                await salesAPI.create(data);
+                document.getElementById('message').textContent = 'Sale created successfully!';
+                window.location.href = '/Sales';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('message').textContent = 'Error creating sale';
+            }
+        });
+
+        loadCustomers();
+        loadProducts();
+    </script>
+}

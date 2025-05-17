@@ -1,8 +1,6 @@
-﻿using CustomerSalesSystem.Application.DTOs;
-using CustomerSalesSystem.Application.Interfaces.Repositories;
-using Dapper;
+﻿using Dapper;
 
-namespace CustomerSalesSystem.Infrastructure.Repositories.Products
+namespace CustomerSalesSystem.Infrastructure.Repositories
 {
     public class ProductReadRepository : IProductReadRepository
     {

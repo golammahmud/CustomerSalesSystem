@@ -1,13 +1,6 @@
 ﻿using CustomerSalesSystem.Application.Features.Customers.Commands;
-using CustomerSalesSystem.Application.Interfaces.Repositories;
-using CustomerSalesSystem.Domain.Interfaces;
-using CustomerSalesSystem.Infrastructure.Persistence;
-using CustomerSalesSystem.Infrastructure.Repositories.Customers;
-using CustomerSalesSystem.Infrastructure.Repositories.Products;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace CustomerSalesSystem.Infrastructure;
 
@@ -26,12 +19,14 @@ public static class DependencyInjection
         // Repositories (EF Core - Write)
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
-      
+        services.AddScoped<ISalesRepository, SaleRepository>();
+
 
         // Dapper Read Access
         services.AddScoped<DapperContext>();
         services.AddScoped<ICustomerReadRepository, CustomerReadRepository>();
         services.AddScoped<IProductReadRepository, ProductReadRepository>();
+        services.AddScoped<ISaleReadRepository, SaleReadRepository>();
 
         return services;
 

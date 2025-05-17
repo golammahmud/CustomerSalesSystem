@@ -1,8 +1,4 @@
-﻿using CustomerSalesSystem.Application.Features.Customers.Commands;
-using CustomerSalesSystem.Application.Features.Customers.Queries;
-using CustomerSalesSystem.Application.Features.Products.Commands;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace CustomerSalesSystem.API.Controllers
 {
@@ -22,7 +18,7 @@ namespace CustomerSalesSystem.API.Controllers
         {
             var query = new GetCustomerByIdQuery { Id = id };
             var result = await _mediator.Send(query);
-            return Ok(result);
+            return result is not null ? Ok(result) : NotFound();
         }
 
         [HttpPost]

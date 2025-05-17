@@ -1,7 +1,4 @@
-﻿using CustomerSalesSystem.Application.DTOs;
-using CustomerSalesSystem.Domain.Entities;
-
-namespace CustomerSalesSystem.Application.Interfaces.Repositories
+﻿namespace CustomerSalesSystem.Application.Interfaces.Repositories
 {
     public interface ICustomerReadRepository
     {

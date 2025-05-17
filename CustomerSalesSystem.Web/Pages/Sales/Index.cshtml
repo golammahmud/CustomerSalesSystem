@@ -1,0 +1,127 @@
+﻿@page
+@model CustomerSalesSystem.Web.Pages.Sales.IndexModel
+@{
+    ViewData["Title"] = "Sales";
+}
+
+<h2 class="mb-4">Sales List</h2>
+
+<a class="btn btn-primary mb-3" asp-page="@PageNavigation.CreateSale">Create New Sale</a>
+
+<form method="get" id="salesFilter" class="row g-3 align-items-end">
+    <div class="col-md-4">
+        <label for="customerId" class="form-label">Customer:</label>
+        <select id="customerId" class="form-select">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label for="saleDate" class="form-label">Date:</label>
+        <input type="date" id="saleDate" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-success ms-2">Filter</button>
+        <button type="reset" id="clearButton"  class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i> Clear
+        </button>
+    </div>
+   
+
+</form>
+
+<hr class="my-4" />
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="salesTableBody">
+        <!-- Rows will be populated via JS -->
+    </tbody>
+</table>
+
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { salesAPI } from '/js/api.js'; 
+        import { customerAPI } from '/js/api.js';
+
+        let isFiltering = false;
+
+        async function loadCustomers() {
+            const response = await customerAPI.getAll();
+            const select = document.getElementById('customerId');
+            console.log(response)
+            response.data.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadSales() {
+            const response = await salesAPI.getAll();
+            renderSales(response.data);
+        }
+        document.getElementById('salesFilter').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Use 'e' not 'event'
+            isFiltering = true;
+            const customerId = document.getElementById('customerId').value;
+            const date = document.getElementById('saleDate').value;
+            const response = await salesAPI.filter(customerId || null, date || null);
+            console.log("filter response", response);
+            renderSales(response.data);
+        });
+
+
+
+        function renderSales(sales) {
+            const tbody = document.getElementById('salesTableBody');
+            tbody.innerHTML = '';
+
+            if (!sales || sales.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="5" class="text-center text-danger">No sales found.</td>
+                `;
+                tbody.appendChild(row);
+                return;
+            }
+
+            sales.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.customerName}</td>
+                    <td>${s.productName}</td>
+                    <td>${s.quantity}</td>
+                    <td>${s.totalPrice}</td>
+                    <td>${s.saleDate?.split('T')[0]}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        document.getElementById('clearButton').addEventListener('click', async function (e) {
+            isFiltering = false;
+
+            // Reload all sales data
+            await loadSales();
+        });
+
+        loadCustomers();
+        if (!isFiltering) {
+            loadSales();
+        }
+    </script>
+}
+

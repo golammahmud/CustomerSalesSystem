@@ -1,0 +1,60 @@
+﻿@page "{id:int}"
+@model CustomerSalesSystem.Web.Pages.Customers.EditModel
+@{
+    ViewData["Title"] = "Edit Customer";
+}
+
+<h2>Edit Customer</h2>
+<div class="row  justify-content-center">
+    <div class="col-md-6 card justify-content-center shadow-sm p-3">
+        <form method="post" id="editCustomerForm">
+            <input type="hidden" id="customerId" value="@Model.Customer.Id" />
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input id="name" class="form-control" value="@Model.Customer.Name" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input id="email" class="form-control" value="@Model.Customer.Email" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input id="phone" class="form-control" value="@Model.Customer.Phone" required />
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module">
+        import { customerAPI } from '/js/api.js'; // Adjust the path as needed
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('#editCustomerForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const id = document.getElementById("customerId").value;
+
+                console.log(id);
+                const customer = {
+                    id: document.getElementById("customerId").value,
+                    name: document.getElementById("name").value,
+                    email: document.getElementById("email").value,
+                    phone: document.getElementById("phone").value
+                };
+
+                try {
+                    await customerAPI.update(id, customer);
+                    window.location.href = '/Customers';
+                } catch (err) {
+                    alert("Failed to update customer.");
+                }
+            });
+        });
+    </script>
+}
+
