@@ -9,12 +9,27 @@
 <div class="row  justify-content-center">
     <div class="col-md-6 card justify-content-center shadow-sm p-3">
         <form id="saleForm">
-            <div class="mb-3">
-                <label for="customerId" class="form-label">Customer</label>
-                <select class="form-select" id="customerId" required>
-                    <option value="">Select customer</option>
-                </select>
+            <div class="row g-3 align-items-center">
+                <div class="col-8">
+                    <label for="customerId" class="form-label">Customer</label>
+                    <select class="form-select" id="customerId" required style="min-width: 200px;">
+                        <option value="">Select customer</option>
+                        <!-- customer options here -->
+                    </select>
+                </div>
+
+                <div class="col-4">
+                    <label for="pageSize" class="form-label">Page Size</label>
+                    <select class="form-select" id="pageSize" style="width: 100px;">
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
             </div>
+
+
 
             <div class="mb-3">
                 <label for="productId" class="form-label">Product</label>
@@ -48,16 +63,23 @@
         import { productAPI } from '/js/api.js';
 
 
-        async function loadCustomers() {
-            const res = await customerAPI.getAll();
-            const select = document.getElementById('customerId');
-            res.data.forEach(c => {
-                const option = document.createElement('option');
-                option.value = c.id;
-                option.textContent = c.name;
-                select.appendChild(option);
-            });
-        }
+       async function loadCustomers() {
+    const pageSize = parseInt(document.getElementById('pageSize').value, 10);
+
+    const res = await customerAPI.getAll(1, pageSize);
+    const select = document.getElementById('customerId');
+
+    // Clear existing options except the default one
+    select.querySelectorAll('option:not([value=""])').forEach(opt => opt.remove());
+
+    // Use res.data.items instead of res.data
+    (res.data.items || []).forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.name;
+        select.appendChild(option);
+    });
+}
 
         async function loadProducts() {
             const res = await productAPI.getAll();
@@ -91,5 +113,8 @@
 
         loadCustomers();
         loadProducts();
+
+                document.getElementById("pageSize").addEventListener("change", loadCustomers);
+
     </script>
 }

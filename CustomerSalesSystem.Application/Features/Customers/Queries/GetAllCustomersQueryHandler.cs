@@ -1,10 +1,6 @@
-﻿using CustomerSalesSystem.Application.DTOs;
-using CustomerSalesSystem.Application.Interfaces.Repositories;
-using MediatR;
-
-namespace CustomerSalesSystem.Application.Features.Customers.Queries
+﻿namespace CustomerSalesSystem.Application.Features.Customers.Queries
 {
-    public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery, IEnumerable<CustomerDto>>
+    public class GetAllCustomersQueryHandler : IRequestHandler<GetAllCustomersQuery, PagedResult<CustomerDto>>
     {
         private readonly ICustomerReadRepository _repository;
 
@@ -13,9 +9,9 @@ namespace CustomerSalesSystem.Application.Features.Customers.Queries
             _repository = repository;
         }
 
-        public async Task<IEnumerable<CustomerDto>> Handle(GetAllCustomersQuery request, CancellationToken cancellationToken)
+        public async Task<PagedResult<CustomerDto>> Handle(GetAllCustomersQuery request, CancellationToken cancellationToken)
         {
-            return await _repository.GetAllAsync();
+            return await _repository.GetAllAsync(request.PageNumber, request.PageSize);
         }
     }
 }

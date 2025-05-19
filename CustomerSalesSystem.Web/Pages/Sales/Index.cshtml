@@ -10,11 +10,28 @@
 
 <form method="get" id="salesFilter" class="row g-3 align-items-end">
     <div class="col-md-4">
-        <label for="customerId" class="form-label">Customer:</label>
-        <select id="customerId" class="form-select">
-            <option value="">All</option>
-        </select>
+        <div class="row g-3 align-items-center">
+            <div class="col-8">
+                <label for="customerId" class="form-label">Customer</label>
+                <select class="form-select" id="customerId" required style="min-width: 200px;">
+                    <option value="">Select customer</option>
+                    <!-- customer options here -->
+                </select>
+            </div>
+
+            <div class="col-4">
+                <label for="pageSize" class="form-label">Page Size</label>
+                <select class="form-select" id="pageSize" style="width: 100px;">
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
     </div>
+   
+
     <div class="col-md-4">
         <label for="saleDate" class="form-label">Date:</label>
         <input type="date" id="saleDate" class="form-control" />
@@ -57,11 +74,17 @@
 
         let isFiltering = false;
 
-        async function loadCustomers() {
-            const response = await customerAPI.getAll();
+                   async function loadCustomers() {
+            const pageSize = parseInt(document.getElementById('pageSize').value, 10);
+
+            const res = await customerAPI.getAll(1, pageSize);
             const select = document.getElementById('customerId');
-            console.log(response)
-            response.data.forEach(c => {
+
+            // Clear existing options except the default one
+            select.querySelectorAll('option:not([value=""])').forEach(opt => opt.remove());
+
+            // Use res.data.items instead of res.data
+            (res.data.items || []).forEach(c => {
                 const option = document.createElement('option');
                 option.value = c.id;
                 option.textContent = c.name;
@@ -122,6 +145,8 @@
         if (!isFiltering) {
             loadSales();
         }
+
+          document.getElementById("pageSize").addEventListener("change", loadCustomers);
     </script>
 }
 

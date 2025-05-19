@@ -5,7 +5,7 @@ const API_BASE = 'https://localhost:7120/api';
 
 
 export const customerAPI = {
-    getAll: () => axios.get(`${API_BASE}/customers`),
+    getAll: (pageNumber, pageSize) => axios.get(`${API_BASE}/customers`, { params: { pageNumber, pageSize }}),
     getById: id => axios.get(`${API_BASE}/customers/${id}`),
     create: data => axios.post(`${API_BASE}/customers`, data),
     update: (id, data) => axios.put(`${API_BASE}/customers/${id}`, data),

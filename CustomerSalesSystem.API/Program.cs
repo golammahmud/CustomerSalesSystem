@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
 });
 
 
-
+builder.Services.AddResponseCompression();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

@@ -47,10 +47,16 @@ namespace CustomerSalesSystem.API.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 50)
         {
-            var result = await _mediator.Send(new GetAllCustomersQuery());
+            var result = await _mediator.Send(new GetAllCustomersQuery
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            });
+
             return Ok(result);
         }
+
     }
 }
