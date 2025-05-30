@@ -58,5 +58,24 @@ namespace CustomerSalesSystem.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("search")]
+        public async Task<ActionResult<PagedResult<CustomerDto>>> Search([FromBody] CustomerSearchRequest request)
+        {
+            try
+            {
+                var result = await _mediator.Send(new GetAllFilterCustomersQuery
+                {
+                    Filters = request.Filters,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                });
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
     }
 }

@@ -8,10 +8,67 @@
 
 <a class="btn btn-primary mb-3" asp-page="Create">Add New Customer</a>
 
+<div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="loader-container">
+        <div class="custom-spinner"></div>
+        <div class="loading-text">Please wait, processing...</div>
+    </div>
+</div>
+
+
+<!-- Top-right Language Picker -->
+<div id="languagePicker" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+    @*   <label for="languageSelect" class="form-label fw-semibold text-white bg-dark p-2 rounded">
+         Couldn't detect your language. Please select manually: 
+    </label> *@
+    <select id="languageSelect" class="form-select mt-1">
+        <option value="en-US">English (US)</option>
+        <option value="bn-BD">Bengali (Bangladesh)</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <!-- Add more as needed -->
+    </select>
+</div>
+
 @if (Model.Customers?.Any() == true)
 {
-    <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
-        <table class="table table-bordered">
+    //<div class="container mt-4">
+    <div class="container mt-4">
+        <form method="post" onsubmit="showLoading()">
+            <div class="input-group">
+                <input type="text"
+                       id="searchQuery"
+                       name="searchQuery"
+                       class="form-control"
+                       placeholder="Ask anything..." />
+
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="startVoiceSearch()"
+                        title="Start Voice Search">
+                    🎤
+                </button>
+
+                <button type="button"
+                        class="btn btn-outline-danger"
+                        onclick="stopVoiceSearch()"
+                        title="Stop Voice Search">
+                    ⛔
+                </button>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+
+    <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+        <table class="table table-bordered mb-0">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -34,47 +91,34 @@
                     </tr>
                 }
             </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="4">
-                        <nav aria-label="Customer pagination">
-                            <ul class="pagination justify-content-center">
-                                @* First *@
-                                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
-                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="1">First</a>
-                                </li>
-
-                                @* Previous *@
-                                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
-                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.PageNumber - 1)">Previous</a>
-                                </li>
-
-                                @* Page Numbers *@
-                                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
-                                {
-                                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
-                                        <a class="page-link" asp-page="./Index" asp-route-pageNumber="@i">@i</a>
-                                    </li>
-                                }
-
-                                @* Next *@
-                                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
-                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.PageNumber + 1)">Next</a>
-                                </li>
-
-                                @* Last *@
-                                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
-                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@Model.TotalPages">Last</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </td>
-                </tr>
-            </tfoot>
         </table>
     </div>
 
-
+    <!-- Sticky Footer Outside Table -->
+    <div class="sticky-footer bg-light border-top p-2">
+        <nav aria-label="Customer pagination">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="1">First</a>
+                </li>
+                <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.PageNumber - 1)">Previous</a>
+                </li>
+                @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-page="./Index" asp-route-pageNumber="@i">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.PageNumber + 1)">Next</a>
+                </li>
+                <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@Model.TotalPages">Last</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 }
 else
 {
@@ -104,5 +148,171 @@ else
             }
         };
     </script>
+
+    <script>
+        //  function startVoiceSearch() {
+        //     const recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+        //     recognition.lang = 'en-US';
+        //     recognition.onresult = function (event) {
+        //         document.getElementById("searchQuery").value = event.results[0][0].transcript;
+        //     };
+        //     recognition.start();
+        // }
+
+        //         function startVoiceSearch() {
+        //     const selectedLang = document.getElementById("languageSelect")?.value || 'en-US';
+
+        //     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        //     recognition.lang = selectedLang;
+        //     recognition.interimResults = false;
+        //     recognition.maxAlternatives = 1;
+
+        //     recognition.onresult = function (event) {
+        //         const voiceText = event.results[0][0].transcript;
+        //         document.getElementById("searchQuery").value = voiceText;
+        //         document.getElementById("resultText").textContent = `You said: "${voiceText}"`;
+
+        //         // Optional: Automatically submit or call your backend
+        //         submitSearch(voiceText);
+        //     };
+
+        //     recognition.onerror = function (err) {
+        //         console.error("Speech recognition error:", err);
+        //         alert("Voice recognition error: " + err.error);
+        //     };
+
+        //     recognition.start();
+        // }
+       window.addEventListener("load", function () {
+            hideLoading();
+        });
+                function submitSearch(query) {
+            document.getElementById("searchQuery").value = query;
+            showLoading();
+            document.querySelector("form").submit();
+        }
+
+        function showLoading() {
+            document.getElementById("loadingOverlay").classList.remove("d-none");
+        }
+
+        function hideLoading() {
+            document.getElementById("loadingOverlay").classList.add("d-none");
+        }
+
+
+
+                let recognition;
+        let isListening = false;
+
+        function startVoiceSearch() {
+            if (isListening) return;
+
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = document.getElementById("languageSelect")?.value || 'en-US';
+            recognition.interimResults = false;
+            recognition.continuous = true; // Try to keep it running longer
+            isListening = true;
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                document.getElementById("searchQuery").value = transcript;
+                // document.getElementById("resultText").textContent = `You said: "${transcript}"`;
+                submitSearch(transcript);
+                stopVoiceSearch(); // Stop after capturing
+            };
+
+            recognition.onend = function () {
+                if (isListening) recognition.start(); // Restart if needed
+            };
+
+            recognition.onerror = function (event) {
+                console.error("Error:", event.error);
+                isListening = false;
+                alert("Microphone error: " + event.error);
+            };
+
+            recognition.start();
+        }
+
+        function stopVoiceSearch() {
+            if (recognition) {
+                isListening = false;
+                recognition.stop();
+            }
+        }
+
+        function submitSearch(query) {
+            // For Razor Pages: set input value and submit
+            document.getElementById("searchQuery").value = query;
+            document.querySelector("form").submit();
+
+            // OR if using Axios to call backend directly:
+            /*
+            axios.post('/api/voice-search', { query })
+                 .then(response => console.log(response.data))
+                 .catch(error => console.error(error));
+            */
+        }
+    </script>
 }
 
+<style>
+    .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Light background to hide content behind */
+        z-index: 5; /* Ensure it stays above the rows */
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        backdrop-filter: blur(4px);
+        background-color: rgba(255, 255, 255, 0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .custom-spinner {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #007bff;
+        border-top: 6px solid transparent;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    }
+
+    .loading-text {
+        margin-top: 12px;
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    @@keyframes spin {
+        to
+
+    {
+        transform: rotate(360deg);
+    }
+
+    }
+</style>

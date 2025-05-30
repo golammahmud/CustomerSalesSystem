@@ -1,6 +1,6 @@
 ﻿import axios from 'https://cdn.skypack.dev/axios';
 
-const API_BASE = 'https://localhost:7120/api';
+const API_BASE = 'https://customersalessystemapi-dya6h3fjfvfvcxfd.canadacentral-01.azurewebsites.net/api';
 
 
 

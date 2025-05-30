@@ -14,7 +14,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("https://localhost:7049") // frontend origin
+                          policy.WithOrigins(
+                                    "https://localhost:7049",
+                                    "https://customersalessystemweb20250523111305-bscjagdyc7ehbvcw.canadacentral-01.azurewebsites.net" // Add your actual frontend URL if deployed
+                                )
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -36,8 +39,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(MyAllowSpecificOrigins);
 
+app.UseCors(MyAllowSpecificOrigins);
+app.UseDeveloperExceptionPage();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

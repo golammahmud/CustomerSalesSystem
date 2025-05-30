@@ -1,13 +1,24 @@
 using CustomerSalesSystem.Web.Services;
+using CustomerSalesSystem.Web.Services.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//builder.Services.AddHttpClient("API", client =>
+//{
+//    client.BaseAddress = new Uri("https://customersalessystemapi-dya6h3fjfvfvcxfd.canadacentral-01.azurewebsites.net/api/");
+//});
+
+var apiBaseUrl = builder.Configuration["ApiBaseUrls:CustomerSalesApi"];
+
 builder.Services.AddHttpClient("API", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7120/api/");
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 
+builder.Services.AddHttpClient(); // register IHttpClientFactory
+
+builder.Services.AddScoped<IFilterQueryFromAIService, FilterQueryFromAIService>();
 
 builder.Services.AddHttpClient<CustomerService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
 builder.Services.AddHttpClient<ProductService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
