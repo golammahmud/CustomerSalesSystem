@@ -19,4 +19,27 @@ namespace CustomerSalesSystem.Application.DTOs
         [JsonPropertyName("value")]
         public string? Value { get; set; }
     }
+    public class AIQueryResult
+    {
+        [JsonPropertyName("filters")]
+        public List<AIFieldFilter> Filters { get; set; } = new();
+    }
+
+    public class AIIntentResult
+    {
+        [JsonPropertyName("intent")]
+        public string Intent { get; set; } = default!; // e.g. "SearchCustomer", "SearchProduct", "SearchSales"
+
+        [JsonPropertyName("entities")]
+        public List<AIFieldFilter> Entities { get; set; } = new();
+    }
+
+    public class SearchRequestModel
+    {
+        public string Query { get; set; }
+        public string Language { get; set; }
+        public bool VoiceMode { get; set; }
+    }
+
+
 }

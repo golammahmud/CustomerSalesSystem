@@ -2,6 +2,9 @@
 {
     public static class PageNavigation
     {
+        #region search
+        public static string GlobalSearch => "/Search/GlobalSearch";
+        #endregion search
         #region Customer
         public static string CustomerList => "/Customers/Index";
         public static string EditCustomer(int id) => $"/Customers/Edit?id={id}";

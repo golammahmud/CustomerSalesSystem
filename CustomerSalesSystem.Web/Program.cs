@@ -1,4 +1,5 @@
 using CustomerSalesSystem.Web.Services;
+using CustomerSalesSystem.Web.Services.IService;
 using CustomerSalesSystem.Web.Services.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,10 +20,11 @@ builder.Services.AddHttpClient("API", client =>
 builder.Services.AddHttpClient(); // register IHttpClientFactory
 
 builder.Services.AddScoped<IFilterQueryFromAIService, FilterQueryFromAIService>();
+builder.Services.AddScoped<IGlobalSearchAndChatService, GlobalSearchAndChatService>();
 
-builder.Services.AddHttpClient<CustomerService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
-builder.Services.AddHttpClient<ProductService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
-builder.Services.AddHttpClient<SaleService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
+//builder.Services.AddHttpClient<CustomerService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
+//builder.Services.AddHttpClient<ProductService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
+//builder.Services.AddHttpClient<SaleService>(c => c.BaseAddress = new Uri("https://localhost:7120/"));
 
 // Add services to the container.
 builder.Services.AddRazorPages();

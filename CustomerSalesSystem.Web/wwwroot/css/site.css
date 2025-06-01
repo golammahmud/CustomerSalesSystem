@@ -20,3 +20,31 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+@media (max-width: 576px) {
+    .input-group > .btn i {
+        margin: 0;
+    }
+
+    .input-group {
+        flex-wrap: wrap;
+    }
+}
+
+.glow {
+    animation: glow 1.5s infinite;
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px #0d6efd;
+    }
+
+    50% {
+        box-shadow: 0 0 20px #0d6efd;
+    }
+
+    100% {
+        box-shadow: 0 0 5px #0d6efd;
+    }
+}

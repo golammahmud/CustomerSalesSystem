@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CustomerSalesSystem.Web.Pages.Customers
 {
-    public class IndexModel(IHttpClientFactory httpClientFactory, IFilterQueryFromAIService filterQueryService) : PageModel
+    public class IndexModel(IHttpClientFactory httpClientFactory, IFilterQueryFromAIService filterQueryService) : BasePageModel
     {
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IFilterQueryFromAIService _filterQueryService = filterQueryService;
 
         [BindProperty(SupportsGet = true)]
-        public string SearchQuery { get; set; }= string.Empty;
+        public string CsSearchQuery { get; set; }= string.Empty;
         public List<object> Results { get; set; } = new();
 
 
@@ -40,14 +40,15 @@ namespace CustomerSalesSystem.Web.Pages.Customers
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (string.IsNullOrWhiteSpace(SearchQuery))
+            if (string.IsNullOrWhiteSpace(CsSearchQuery))
                 return Page();
 
-            var aiResult = await _filterQueryService.GetFilterQueryFromOpenAPI(SearchQuery);
+            var aiResult = await _filterQueryService.GetFilterQueryFromOpenAPI(CsSearchQuery);
 
             if (aiResult == null || aiResult.Filters.Count == 0)
             {
                 ModelState.AddModelError("", "Could not understand your query.");
+                Speak("Could not understand your query.");
                 return Page();
             }
 
@@ -67,7 +68,18 @@ namespace CustomerSalesSystem.Web.Pages.Customers
                 {
                     Customers = pagedResult.Items;
                     TotalCount = pagedResult.TotalCount;
+
+                    if (pagedResult?.Items.Any() == false && !string.IsNullOrWhiteSpace(CsSearchQuery))
+                    {
+                        Speak("Sorry no search data found..try again with valid data");
+                    }
+                    else
+                    {
+                        Speak("sarch result found ..here you go");
+                    }
+                   
                 }
+                
             }
             else
             {
