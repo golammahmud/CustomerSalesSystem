@@ -75,6 +75,13 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            <div id="chatModal" class="modal" style="display:none;">
+                <div class="modal-content" style="max-width: 600px; margin: auto; padding: 15px; border-radius: 8px; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <span id="closeChatModal" style="float:right; cursor:pointer;">&times;</span>
+                    <h3>Chat with AI</h3>
+                    <div id="chatConversation" style="max-height: 600px; overflow-y: auto; margin-bottom: 10px;"></div>
+                </div>
+            </div>
             @RenderBody()
         </main>
     </div>
@@ -102,6 +109,13 @@
                 document.getElementById('voiceBtn').addEventListener('click', () => startVoiceSearch());
                 document.getElementById('stopBtn').addEventListener('click', () => stopVoiceSearch());
             }
+
+       const closeBtn = document.getElementById("closeChatModal");
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                document.getElementById("chatModal").style.display = "none";
+            };
+        }
         });
     </script>
 

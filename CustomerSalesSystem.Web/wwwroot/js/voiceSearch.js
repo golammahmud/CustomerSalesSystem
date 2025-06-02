@@ -142,9 +142,9 @@ window.initVoiceSearch = function ({
 };
 
 window.startVoiceSearch = () => {
-    window.speak("Hi there, how can I help you?", language);
 
     if (recognition && !isListening) {
+        window.speak("Hi there, how can I help you?", language);
         recognition.start();
     }
 };
@@ -196,7 +196,22 @@ function handleVoiceTranscript(transcript) {
 
             switch (data.intent?.toLowerCase()) {
                 case "chat":
-                    speak(data.response || "Sorry, I didn't catch that.");
+                    
+                    const userMsg = transcript;
+                    const aiMsg = data.response || "Sorry, I didn't catch that.";
+                    // Show modal
+                    const chatModal = document.getElementById("chatModal");
+                    const chatBox = document.getElementById("chatConversation");
+
+                    if (chatModal && chatBox) {
+                        chatModal.style.display = "block";
+                        chatBox.innerHTML += `<div class="user"><strong>You:</strong> ${userMsg}</div>`;
+                        chatBox.innerHTML += `<div class="ai"><strong>AI:</strong> ${aiMsg}</div>`;
+                        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
+                    }
+
+                    speak(aiMsg);
+                    //speak(data.response || "Sorry, I didn't catch that.");
                     break;
 
                 case "navigate":
