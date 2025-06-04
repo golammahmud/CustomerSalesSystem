@@ -14,33 +14,42 @@ document.addEventListener('DOMContentLoaded', () => {
 window.getVoiceLang = function () {
     return localStorage.getItem("voiceLang") || "en-US";
 };
-//text to spech
 
+//text to spech
 if (!'speechSynthesis' in window) {
     alert("Your browser does not support text-to-speech.");
 }
 window.speak = function (text, lang = 'en-US') {
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = lang;
-
-        // Optional voice selection
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            msg.voice = voices.find(v => v.lang === lang) || voices[0];
-        }
-
-        speechSynthesis.cancel(); // Cancel previous if any
-        speechSynthesis.speak(msg);
-        console.log("Speaking:", text, "Lang:", lang);
-    } else {
+    if (!('speechSynthesis' in window)) {
         alert("Sorry, speech synthesis is not supported in this browser.");
+        return;
     }
-}
-// Fix: Load voices before using them
-window.speechSynthesis.onvoiceschanged = () => {
-    console.log("Voices loaded:", speechSynthesis.getVoices());
+
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = lang;
+
+    const voices = window.speechSynthesis.getVoices();
+
+    // Try to get a sweet female voice by name
+    const preferredVoice = voices.find(v =>
+        v.name === "Google US English" ||
+        v.name === "Google UK English Female" ||
+        v.name === "Samantha" ||
+        v.name.includes("Zira")
+    );
+
+    msg.voice = preferredVoice || voices.find(v => v.lang === lang) || voices[0];
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(msg);
+    console.log("🎙️ Speaking:", text, "| Voice:", msg.voice?.name);
 };
+
+// Fix: Load voices before first use
+window.speechSynthesis.onvoiceschanged = () => {
+    console.log("✅ Voices loaded:", speechSynthesis.getVoices());
+};
+
 
 
 // Search + Chat Voice Recognition
