@@ -30,6 +30,8 @@ namespace CustomerSalesSystem.Application.DTOs
         [JsonPropertyName("intent")]
         public string Intent { get; set; } = default!; // e.g. "SearchCustomer", "SearchProduct", "SearchSales"
 
+        [JsonPropertyName("topic")]
+        public string Topic { get; set; } = default!;
         [JsonPropertyName("entities")]
         public List<AIFieldFilter> Entities { get; set; } = new();
     }

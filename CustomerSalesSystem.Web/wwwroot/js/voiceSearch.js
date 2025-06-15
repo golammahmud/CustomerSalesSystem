@@ -1,7 +1,13 @@
-﻿//store selected language in local storage 
+﻿// Voice Assistant JavaScript Module
+
+// ================================
+// 🔁 Language Persistence
+// ================================
+
 document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('languageSelect');
     const savedLang = localStorage.getItem('voiceLang');
+
     if (langSelect && savedLang) {
         langSelect.value = savedLang;
     }
@@ -11,43 +17,66 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('voiceLang', selectedLang);
     });
 });
+
 window.getVoiceLang = function () {
     return localStorage.getItem("voiceLang") || "en-US";
 };
-//text to spech
+
+// ================================
+// 🔊 Text-to-Speech
+// ================================
 
 if (!'speechSynthesis' in window) {
     alert("Your browser does not support text-to-speech.");
 }
-window.speak = function (text, lang = 'en-US') {
-    if ('speechSynthesis' in window) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = lang;
 
-        // Optional voice selection
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            msg.voice = voices.find(v => v.lang === lang) || voices[0];
-        }
-
-        speechSynthesis.cancel(); // Cancel previous if any
-        speechSynthesis.speak(msg);
-        console.log("Speaking:", text, "Lang:", lang);
-    } else {
-        alert("Sorry, speech synthesis is not supported in this browser.");
+window.speak = function (text, lang = null) {
+    if (!'speechSynthesis' in window) {
+        alert("Sorry, your browser doesn't support speech synthesis.");
+        return;
     }
-}
-// Fix: Load voices before using them
+
+    // Step 1: Get preferred language from dropdown or override
+    const selectedLang = lang || window.getVoiceLang();
+    const availableVoices = speechSynthesis.getVoices();
+
+    // Step 2: Check if the voice is available
+    const matchedVoice = availableVoices.find(v => v.lang === selectedLang);
+    const fallbackLang = 'en-US';
+    const fallbackVoice = availableVoices.find(v => v.lang === fallbackLang) || availableVoices[0];
+
+    const finalLang = matchedVoice ? selectedLang : fallbackLang;
+    const voiceToUse = matchedVoice || fallbackVoice;
+
+    // Step 3: Clean up emoji and other unsupported symbols
+    const cleanText = text.replace(/[\u{1F600}-\u{1F64F}]/gu, '').trim(); // remove emoji
+
+    const msg = new SpeechSynthesisUtterance(cleanText || "Sorry, nothing to speak.");
+    msg.lang = finalLang;
+    msg.voice = voiceToUse;
+
+    speechSynthesis.cancel(); // cancel any existing speech
+    speechSynthesis.speak(msg);
+
+    console.log(`🗣️ Speaking in [${finalLang}]:`, cleanText);
+};
+
+
 window.speechSynthesis.onvoiceschanged = () => {
     console.log("Voices loaded:", speechSynthesis.getVoices());
 };
 
+// ================================
+// 🎙️ Voice Search Initialization
+// ================================
 
-// Search + Chat Voice Recognition
 let recognition;
 let isListening = false;
 const language = window.getVoiceLang();
 
+/**
+ * Initializes voice recognition for search/chat input
+ */
 window.initVoiceSearch = function ({
     inputId = "searchQuery",
     onResult = null,
@@ -64,7 +93,7 @@ window.initVoiceSearch = function ({
 
     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = language;
-    recognition.continuous = true;  // keep listening until stopped explicitly
+    recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onstart = () => {
@@ -74,7 +103,6 @@ window.initVoiceSearch = function ({
     };
 
     recognition.onresult = (event) => {
-        // Combine all results since continuous mode might produce multiple results
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
@@ -83,45 +111,9 @@ window.initVoiceSearch = function ({
         console.log("Result:", transcript);
 
         if (inputElement) inputElement.value = transcript;
-
         if (typeof onResult === "function") onResult(transcript);
 
-        // Optional: Auto submit form or trigger processing here
-        // if (autoSubmit && formElement) formElement.submit();
-       
         handleVoiceTranscript(transcript);
-
-        //const chatStatus = document.getElementById("chatStatus");
-        //if (chatStatus) chatStatus.textContent = "🤖 Thinking...";
-
-        //fetch("/Search/GlobalSearch?handler=VoiceSearch", {
-        //    method: "POST",
-        //    headers: {
-        //        "Content-Type": "application/x-www-form-urlencoded"
-        //    },
-        //    body: `userQuery=${encodeURIComponent(transcript)}`
-        //})
-        //    .then(res => {
-        //        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        //        return res.json();
-        //    })
-        //    .then(data => {
-        //        if (chatStatus) chatStatus.textContent = ""; // clear status
-
-        //        if (data.intent === "Chat") {
-        //            // Show chat reply somewhere (replace alert if needed)
-        //            speak(data.response);
-        //        } else {
-        //            const filters = encodeURIComponent(JSON.stringify(data.filters));
-        //            window.location.href = `/Search/GlobalSearch?intent=${data.intent}&filters=${filters}`;
-        //        }
-        //    })
-        //    .catch(err => {
-        //        if (chatStatus) chatStatus.textContent = "❌ Failed to process query.";
-        //        console.error("❌ Error:", err);
-        //        speak(" Failed to process query");
-        //        setTimeout(() => chatStatus.textContent = "", 3000);
-        //    });
     };
 
     recognition.onerror = (event) => {
@@ -135,26 +127,31 @@ window.initVoiceSearch = function ({
         isListening = false;
         console.log("🛑 Listening stopped.");
         toggleVoiceUI(false);
-        // Optionally restart recognition automatically if you want ultra-long listening
-        // But be careful: this can cause unexpected loops or bugs
-        // recognition.start();
     };
 };
 
+/**
+ * Starts voice recognition
+ */
 window.startVoiceSearch = () => {
-
     if (recognition && !isListening) {
         window.speak("Hi there, how can I help you?", language);
         recognition.start();
     }
 };
 
+/**
+ * Stops voice recognition
+ */
 window.stopVoiceSearch = () => {
     if (recognition && isListening) {
         recognition.stop();
     }
 };
 
+/**
+ * Enables/disables mic and stop button UI
+ */
 function toggleVoiceUI(listening) {
     const micBtn = document.getElementById("voiceBtn");
     const stopBtn = document.getElementById("stopBtn");
@@ -162,73 +159,75 @@ function toggleVoiceUI(listening) {
     if (stopBtn) stopBtn.disabled = !listening;
 }
 
+// ================================
+// 🔁 Refresh Button & Autofocus
+// ================================
 
-// Optional refresh button logic
 document.getElementById("refreshBtn")?.addEventListener("click", () => {
     const input = document.getElementById("searchQuery");
     if (input) input.value = "";
     location.reload();
 });
 
-// Optional focus on search input when page loads
 window.onload = () => {
     document.getElementById("searchQuery")?.focus();
 };
 
+// ================================
+// 🔍 Form Submit Event
+// ================================
 
+$(document).ready(function () {
+    $('#globalSearchForm').on('submit', function (e) {
+        e.preventDefault(); // prevent default submit
+
+        let query = $('#searchQuery').val();
+        handleVoiceTranscript(query); // process voice intent
+
+        // You can delay form submission to let `handleVoiceTranscript()` finish
+        setTimeout(() => {
+            this.submit(); // now submit the form after processing
+        }, 200); // small delay (optional, adjust as needed)
+    });
+});
+
+
+// ================================
+// 🧠 Handle Transcription Logic
+// ================================
+
+/**
+ * Processes the transcribed voice input
+ */
 function handleVoiceTranscript(transcript) {
     const chatStatus = document.getElementById("chatStatus");
     if (chatStatus) chatStatus.textContent = "🤖 Thinking...";
 
     fetch("/Search/GlobalSearch?handler=VoiceSearch", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `userQuery=${encodeURIComponent(transcript)}`
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `userQuery=${encodeURIComponent(transcript)}&pagePath=${encodeURIComponent(currentPageContext.path)}`
     })
         .then(res => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();
         })
         .then(data => {
-            if (chatStatus) chatStatus.textContent = ""; // clear thinking status
+            if (chatStatus) chatStatus.textContent = "";
 
             switch (data.intent?.toLowerCase()) {
                 case "chat":
-                    
-                    const userMsg = transcript;
-                    const aiMsg = data.response || "Sorry, I didn't catch that.";
-                    // Show modal
-                    const chatModal = document.getElementById("chatModal");
-                    const chatBox = document.getElementById("chatConversation");
-
-                    if (chatModal && chatBox) {
-                        chatModal.style.display = "block";
-                        chatBox.innerHTML += `<div class="user"><strong>You:</strong> ${userMsg}</div>`;
-                        chatBox.innerHTML += `<div class="ai"><strong>AI:</strong> ${aiMsg}</div>`;
-                        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
-                    }
-
-                    speak(aiMsg);
-                    //speak(data.response || "Sorry, I didn't catch that.");
+                    displayChatResponse(transcript, data.response);
                     break;
-
                 case "navigate":
-                    if (data.target) {
-                        const targetUrl = data.target.includes("{id}")
-                            ? data.target.replace("{id}", data.id || "0")
-                            : data.target;
-                        window.location.href = targetUrl;
-                    } else {
-                        speak("Navigation target is missing.");
-                    }
+                    const targetUrl = data.target.includes("{id}")
+                        ? data.target.replace("{id}", data.id || "0")
+                        : data.target;
+                    window.location.href = targetUrl;
                     break;
-
                 case "refresh":
                     window.location.reload();
                     break;
-
                 case "fillfield":
                     const { fieldId, value } = data;
                     if (fieldId && value) {
@@ -241,14 +240,12 @@ function handleVoiceTranscript(transcript) {
                         }
                     }
                     break;
-
                 case "searchcustomer":
                 case "searchproduct":
                 case "searchsales":
                     const filters = encodeURIComponent(JSON.stringify(data.filters || []));
                     window.location.href = `/Search/GlobalSearch?intent=${data.intent}&filters=${filters}`;
                     break;
-
                 default:
                     console.warn("⚠️ Unknown intent:", data.intent);
                     speak("Sorry, I didn't understand the command.");
@@ -260,5 +257,22 @@ function handleVoiceTranscript(transcript) {
             speak("Failed to process your command.");
             setTimeout(() => chatStatus.textContent = "", 3000);
         });
+}
+
+/**
+ * Display chat conversation modal
+ */
+function displayChatResponse(userText, responseText) {
+    const chatModal = document.getElementById("chatModal");
+    const chatBox = document.getElementById("chatConversation");
+
+    if (chatModal && chatBox) {
+        chatModal.style.display = "block";
+        chatBox.innerHTML += `<div class="user"><strong>You:</strong> ${userText}</div>`;
+        chatBox.innerHTML += `<div class="ai"><strong>AI:</strong> ${responseText || "Sorry, I didn't catch that."}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    speak(responseText);
 }
 
