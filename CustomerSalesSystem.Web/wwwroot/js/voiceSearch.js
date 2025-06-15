@@ -30,6 +30,17 @@ if (!'speechSynthesis' in window) {
     alert("Your browser does not support text-to-speech.");
 }
 
+    const voices = window.speechSynthesis.getVoices();
+
+    // Try to get a sweet female voice by name
+    const preferredVoice = voices.find(v =>
+        v.name === "Google US English" ||
+        v.name === "Google UK English Female" ||
+        v.name === "Samantha" ||
+        v.name.includes("Zira")
+    );
+
+    msg.voice = preferredVoice || voices.find(v => v.lang === lang) || voices[0];
 window.speak = function (text, lang = null) {
     if (!'speechSynthesis' in window) {
         alert("Sorry, your browser doesn't support speech synthesis.");
@@ -63,7 +74,7 @@ window.speak = function (text, lang = null) {
 
 
 window.speechSynthesis.onvoiceschanged = () => {
-    console.log("Voices loaded:", speechSynthesis.getVoices());
+    console.log("✅ Voices loaded:", speechSynthesis.getVoices());
 };
 
 // ================================
