@@ -26,23 +26,8 @@ window.getVoiceLang = function () {
 // 🔊 Text-to-Speech
 // ================================
 
-if (!'speechSynthesis' in window) {
-    alert("Your browser does not support text-to-speech.");
-}
-
-    const voices = window.speechSynthesis.getVoices();
-
-    // Try to get a sweet female voice by name
-    const preferredVoice = voices.find(v =>
-        v.name === "Google US English" ||
-        v.name === "Google UK English Female" ||
-        v.name === "Samantha" ||
-        v.name.includes("Zira")
-    );
-
-    msg.voice = preferredVoice || voices.find(v => v.lang === lang) || voices[0];
 window.speak = function (text, lang = null) {
-    if (!'speechSynthesis' in window) {
+    if (!('speechSynthesis' in window)) {
         alert("Sorry, your browser doesn't support speech synthesis.");
         return;
     }
@@ -51,25 +36,50 @@ window.speak = function (text, lang = null) {
     const selectedLang = lang || window.getVoiceLang();
     const availableVoices = speechSynthesis.getVoices();
 
-    // Step 2: Check if the voice is available
-    const matchedVoice = availableVoices.find(v => v.lang === selectedLang);
-    const fallbackLang = 'en-US';
-    const fallbackVoice = availableVoices.find(v => v.lang === fallbackLang) || availableVoices[0];
+    // Step 2: Preferred voice names to try in order
+    const preferredVoiceNames = [
+        "Google US English",
+        "Google UK English Female",
+        "Samantha",
+        // Add more preferred voice names here if needed
+        "Zira"
+    ];
 
-    const finalLang = matchedVoice ? selectedLang : fallbackLang;
-    const voiceToUse = matchedVoice || fallbackVoice;
+    // Step 3: Try to find a preferred voice matching the selected language first
+    let voiceToUse = null;
 
-    // Step 3: Clean up emoji and other unsupported symbols
-    const cleanText = text.replace(/[\u{1F600}-\u{1F64F}]/gu, '').trim(); // remove emoji
+    // Find preferred voice by name AND language match
+    voiceToUse = availableVoices.find(v =>
+        preferredVoiceNames.includes(v.name) &&
+        v.lang.toLowerCase().startsWith(selectedLang.toLowerCase().split('-')[0])
+    );
+
+    // If no preferred voice with lang match, try any preferred voice ignoring language
+    if (!voiceToUse) {
+        voiceToUse = availableVoices.find(v => preferredVoiceNames.includes(v.name));
+    }
+
+    // If still no preferred voice, try to find any voice that matches selected language
+    if (!voiceToUse) {
+        voiceToUse = availableVoices.find(v => v.lang === selectedLang);
+    }
+
+    // Finally fallback to English US or first available voice
+    if (!voiceToUse) {
+        voiceToUse = availableVoices.find(v => v.lang === 'en-US') || availableVoices[0];
+    }
+
+    // Step 4: Clean up emoji and other unsupported symbols
+    const cleanText = (text || "").replace(/[\u{1F600}-\u{1F64F}]/gu, '').trim(); // remove emoji
 
     const msg = new SpeechSynthesisUtterance(cleanText || "Sorry, nothing to speak.");
-    msg.lang = finalLang;
+    msg.lang = voiceToUse.lang || selectedLang;
     msg.voice = voiceToUse;
 
     speechSynthesis.cancel(); // cancel any existing speech
     speechSynthesis.speak(msg);
 
-    console.log(`🗣️ Speaking in [${finalLang}]:`, cleanText);
+    console.log(`🗣️ Speaking in [${msg.lang}]:`, cleanText);
 };
 
 
