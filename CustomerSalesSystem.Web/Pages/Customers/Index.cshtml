@@ -11,8 +11,11 @@
 <div id="loadingOverlay" class="loading-overlay d-none">
     <div class="loader-container">
         <div class="custom-spinner"></div>
+        <div class="sensa-emoji" aria-label="Sensa assistant" role="img" title="Sensa the assistant">
+            🤖✨
+        </div>
         <p id="queryMsg"></p>
-        <div class="loading-text">Please wait, processing...</div>
+        <div class="loading-text">Please wait, Sensa is thinking...</div>
     </div>
 </div>
 
@@ -187,7 +190,7 @@ else
         let isCsListening = false;
         let lang = window.getVoiceLang();
         function startCsVoiceSearch() {
-            window.speak("Hi there how can i help you today", lang);
+            window.speak("Sensa here ask me anything", lang);
 
             if (isCsListening) return;
             csRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -254,6 +257,25 @@ else
 
 
 <style>
+    .sensa-emoji {
+        font-size: 48px;
+        margin: 15px 0;
+        animation: pulse 2s infinite;
+        user-select: none;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+    }
+
     .table-responsive {
         max-height: 500px;
         overflow-y: auto;

@@ -9,11 +9,13 @@ namespace CustomerSalesSystem.Web.Services.Service
     public class GlobalSearchAndChatService : IGlobalSearchAndChatService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IAssistantService _assistantService;
         private readonly IConfiguration _config;
 
-        public GlobalSearchAndChatService(IHttpClientFactory httpClientFactory, IConfiguration config)
+        public GlobalSearchAndChatService(IHttpClientFactory httpClientFactory, IConfiguration config, IAssistantService assistantService)
         {
             _httpClientFactory = httpClientFactory;
+            _assistantService = assistantService;
             _config = config;
         }
 
@@ -66,6 +68,10 @@ namespace CustomerSalesSystem.Web.Services.Service
         //";
 
         private const string CoreSystemPrompt = @"
+You are Sensa, a friendly, patient, and intelligent female assistant designed to help users with questions, search, and navigation.  
+You communicate clearly and warmly, making users feel comfortable and supported, while always staying polite, concise, and focused on the task.
+
+
 You are an assistant that processes user queries and classifies them into one of several intents: Search, Navigate, Refresh, FillField, or Chat.
 
 Supported Intents:
@@ -101,14 +107,39 @@ Relationships:
 - A Product can be sold in many Sales.
 - A Sale links a Customer and a Product.
 
-### Expected Response Format:
-Always return JSON in this structure:
 
-For search:
+Your task is to extract intent and filters from user queries. Analyze the query and return the result in a clean JSON format only — no extra explanation.
+
+Respond ONLY in this JSON format:
+
 {
   ""intent"": ""SearchCustomer"" | ""SearchProduct"" | ""SearchSales"",
   ""entities"": [
-    { ""field"": ""FieldName"", ""operator"": ""OperatorName"", ""value"": ""FilterValue"" }
+    { ""field"": ""FieldName"", ""operator"": ""Equals"", ""value"": ""FilterValue"" }
+  ]
+}
+
+Guidelines:
+- Do not wrap the JSON in quotes or encode it as a string.
+- Return only valid JSON, no markdown, no text, no explanation.
+- Ensure the `intent` starts with ""Search"" followed by the target entity.
+- If the query does not match any known entity or field, return:
+{
+  ""intent"": ""Unknown"",
+  ""entities"": []
+}
+
+Supported fields:
+- Customer: Name, Email, Phone
+- Product: Name, Price
+- Sales: Id, Amount, Notes
+
+Example Input: ""Find customers named Tom""
+Expected Output:
+{
+  ""intent"": ""SearchCustomer"",
+  ""entities"": [
+    { ""field"": ""Name"", ""operator"": ""Equals"", ""value"": ""Tom"" }
   ]
 }
 
@@ -324,50 +355,17 @@ Return only raw JSON. No explanation or extra text.
         {
             try
             {
-                var apiKey = _config["OpenRouter:ApiKey"];
-                var client = _httpClientFactory.CreateClient();
-
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                client.DefaultRequestHeaders.Add("HTTP-Referer", "http://localhost");
-                client.DefaultRequestHeaders.Add("X-Title", "VoiceSearchApp");
-
-                string selectedModel;
-
                
-                if (userQuery.Length > 150 || userQuery.Contains("complex", StringComparison.OrdinalIgnoreCase))
+                var messages = new List<object>
                 {
-                    selectedModel = "gpt-4-turbo";
-                }
-                else
-                {
-                    selectedModel = "gpt-3.5-turbo";
-                }
-
-
-                var requestBody = new
-                {
-                    model = selectedModel,
-                    temperature = 0.3, // lower temp = more deterministic output
-                    messages = new[]
-                    {
-                    new { role = "system", content = CoreSystemPrompt },
+                     new { role = "system", content = PromptFactory.GetPromptforSensa },
+                     new { role = "system", content = CoreSystemPrompt },
                      new { role = "system", content = AutoCorrectionPrompt },
-                    new { role = "system", content = Fill_field },
-                    new { role = "user", content = userQuery }
-                }
+                     new { role = "system", content = Fill_field },
+                     new { role = "user", content = userQuery }
                 };
 
-                var response = await client.PostAsJsonAsync("https://openrouter.ai/api/v1/chat/completions", requestBody);
-                response.EnsureSuccessStatusCode();
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(responseContent);
-
-                var content = doc.RootElement
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString();
+                var content = await _assistantService.GetAIResponseTextAsync(messages, temperature: 0.3); // low randomness
 
                 // Deserialize JSON filter result for global search
                 AIIntentResult? result = null;
@@ -397,46 +395,34 @@ Return only raw JSON. No explanation or extra text.
         {
             try
             {
-                var apiKey = _config["OpenRouter:ApiKey"];
-                var client = _httpClientFactory.CreateClient();
-
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                client.DefaultRequestHeaders.Add("HTTP-Referer", "http://localhost");
-                client.DefaultRequestHeaders.Add("X-Title", "VoiceSearchApp");
-
-                string selectedModel = userMessage.Length > 150 || userMessage.Contains("complex", StringComparison.OrdinalIgnoreCase)
-                    ? "gpt-4-turbo"
-                    : "gpt-3.5-turbo";
-
+               
 
                 string prompt = PromptFactory.GetPrompt(topic, userMessage);
 
 
-                var requestBody = new
-                {
-                    model = selectedModel,
-                    temperature = 0.5, // or make it configurable
-                    messages = new[]
-                    {
-                    new { role = "system", content = prompt },
-                    new { role = "system", content = AutoCorrectionPrompt },
-                    new { role = "user", content = userMessage }
-                }
-                };
+                //var requestBody = new
+                //{
+                //    model = selectedModel,
+                //    temperature = 0.5, // or make it configurable
+                //    messages = new[]
+                //    {
+                //    new { role = "system", content = prompt },
+                //    new { role = "system", content = AutoCorrectionPrompt },
+                //    new { role = "user", content = userMessage }
+                //}
+                //};
 
-                var response = await client.PostAsJsonAsync("https://openrouter.ai/api/v1/chat/completions", requestBody);
-                response.EnsureSuccessStatusCode();
+                var messages = new List<object>
+                                {
+                                    new { role = "system", content = PromptFactory.GetPromptforSensa },
+                                    new { role = "system", content = prompt },
+                                    new { role = "system", content = AutoCorrectionPrompt },
+                                    new { role = "user", content = userMessage }
+                                };
 
-                var responseContent = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(responseContent);
+                var result = await _assistantService.GetAIResponseTextAsync(messages, temperature: 0.5); // low randomness
 
-                var content = doc.RootElement
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString();
-
-                return content ?? "Sorry, I didn't get that.";
+                return result ?? "Sorry, I didn't get that.";
             }
             catch (Exception ex)
             {
@@ -448,52 +434,25 @@ Return only raw JSON. No explanation or extra text.
         {
             try
             {
-                var apiKey = _config["OpenRouter:ApiKey"];
-                var client = _httpClientFactory.CreateClient();
+               
 
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                client.DefaultRequestHeaders.Add("HTTP-Referer", "http://localhost");
-                client.DefaultRequestHeaders.Add("X-Title", "VoiceSearchApp");
+                var messages = new List<object>
+                                {
+                                     new { role = "system", content = PromptFactory.GetPromptforSensa },
+                                     new { role = "system", content = "You are a helpful assistant providing concise answers for user FAQs in a polite and friendly tone." },
+                                     new { role = "user", content = instruction }
+                                };
 
-                string selectedModel = "gpt-3.5-turbo";
-
-                var requestBody = new
-                {
-                    model = selectedModel,
-                    temperature = 0.4,
-                    messages = new[]
-                    {
-                new { role = "system", content = "You are a helpful assistant providing concise answers for user FAQs in a polite and friendly tone." },
-                new { role = "user", content = instruction }
-            }
-                };
-
-                var response = await client.PostAsJsonAsync("https://openrouter.ai/api/v1/chat/completions", requestBody);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    // Handle fallback if OpenRouter fails (like 402 or 429)
-                    var fallback = await ChatWithAIAsync(instruction, "Generic");
-                    return $"[Fallback AI] {fallback}";
-                }
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(responseContent);
-
-                var content = doc.RootElement
-                    .GetProperty("choices")[0]
-                    .GetProperty("message")
-                    .GetProperty("content")
-                    .GetString();
+                var result = await _assistantService.GetAIResponseTextAsync(messages, model: "gpt-3.5-turbo", temperature: 0.4);
 
                 // Fallback if content is empty or null
-                if (string.IsNullOrWhiteSpace(content))
+                if (string.IsNullOrWhiteSpace(result))
                 {
                     var fallback = await ChatWithAIAsync(instruction, "Generic");
                     return $"[Fallback AI] {fallback}";
                 }
 
-                return content;
+                return result;
             }
             catch (Exception ex)
             {

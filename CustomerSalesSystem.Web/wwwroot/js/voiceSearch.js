@@ -156,7 +156,7 @@ window.initVoiceSearch = function ({
  */
 window.startVoiceSearch = () => {
     if (recognition && !isListening) {
-        window.speak("Hi there, how can I help you?", language);
+        window.speak("Sensa here. How can I assist you?", language);
         recognition.start();
     }
 };
@@ -222,7 +222,7 @@ $(document).ready(function () {
  */
 function handleVoiceTranscript(transcript) {
     const chatStatus = document.getElementById("chatStatus");
-    if (chatStatus) chatStatus.textContent = "🤖 Thinking...";
+    if (chatStatus) chatStatus.textContent = "🤖 Sensa is Thinking...";
 
     fetch("/Search/GlobalSearch?handler=VoiceSearch", {
         method: "POST",
@@ -289,8 +289,8 @@ function displayChatResponse(userText, responseText) {
 
     if (chatModal && chatBox) {
         chatModal.style.display = "block";
-        chatBox.innerHTML += `<div class="user"><strong>You:</strong> ${userText}</div>`;
-        chatBox.innerHTML += `<div class="ai"><strong>AI:</strong> ${responseText || "Sorry, I didn't catch that."}</div>`;
+        chatBox.innerHTML += `<div class="user"><strong><span style="font-size: 1.2em;">🧑‍💻</span> You:</strong> ${userText}</div>`;
+        chatBox.innerHTML += `<div class="ai"><strong><span style="font-size: 1.2em;">👩‍🎤</span> Sensa:</strong> ${responseText || "Sorry, I didn't catch that."}</div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 

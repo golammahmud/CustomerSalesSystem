@@ -19,6 +19,7 @@ builder.Services.AddHttpClient("API", client =>
 
 builder.Services.AddHttpClient(); // register IHttpClientFactory
 
+builder.Services.AddScoped<IAssistantService, AssistantService>();
 builder.Services.AddScoped<IFilterQueryFromAIService, FilterQueryFromAIService>();
 builder.Services.AddScoped<IGlobalSearchAndChatService, GlobalSearchAndChatService>();
 

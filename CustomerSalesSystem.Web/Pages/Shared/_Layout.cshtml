@@ -59,7 +59,7 @@
 
                     <!-- Language Dropdown -->
                     <div class="ms-lg-3 mt-3 mt-lg-0">
-                        <select id="languageSelect">
+                        <select id="languageSelect" class="form-select">
                             <option value="en-US">English (US)</option>
                             <option value="en-GB">English (UK)</option>
                             <option value="bn-BD">Bangla (Bangladesh)</option>
@@ -125,6 +125,15 @@
             path: "@Context.Request.Path"
         };
         console.log(currentPageContext.path)
+    </script>
+    <script>
+        function navigateTo(page, id) {
+            if (!page || !id) {
+                alert("Invalid target.");
+                return;
+            }
+            window.location.href = `/${page}/${id}`;
+        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

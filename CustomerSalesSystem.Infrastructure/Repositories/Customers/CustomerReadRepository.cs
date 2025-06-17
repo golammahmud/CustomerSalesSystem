@@ -1,8 +1,6 @@
 ﻿using Dapper;
-using Microsoft.Data.SqlClient;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace CustomerSalesSystem.Infrastructure.Repositories
+namespace CustomerSalesSystem.Infrastructure
 {
     public class CustomerReadRepository : ICustomerReadRepository
     {
@@ -69,7 +67,7 @@ namespace CustomerSalesSystem.Infrastructure.Repositories
                     throw new Exception($"Invalid field: {filter.Field}");
 
                 var paramName = $"@param{index}";
-     
+
                 string condition = filter.Operator.ToLower() switch
                 {
                     "equals" => $"{filter.Field} = {paramName}",

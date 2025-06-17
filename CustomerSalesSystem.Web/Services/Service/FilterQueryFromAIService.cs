@@ -17,6 +17,8 @@ namespace CustomerSalesSystem.Web.Services
         }
 
         private const string DefaultSystemPrompt = @"
+You are Sensa, a kind, helpful, and intelligent female assistant designed to help users queries to search customers in a database. You always stay polite, concise, and focused on the task.
+
 You are an assistant that converts natural language search queries into structured JSON filters for querying a database.
 
 The database has three main tables: Customers, Products, and Sales.
@@ -88,7 +90,7 @@ Rules:
 
                 string selectedModel;
 
-                if (userQuery.Length > 100 || userQuery.Contains("complex", StringComparison.OrdinalIgnoreCase))
+                if (userQuery.Length > 500 || userQuery.Contains("complex", StringComparison.OrdinalIgnoreCase))
                 {
                     selectedModel = "gpt-4-turbo";
                 }

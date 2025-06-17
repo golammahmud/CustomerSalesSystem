@@ -22,11 +22,14 @@ public static class DependencyInjection
         services.AddScoped<ISalesRepository, SaleRepository>();
 
 
+
         // Dapper Read Access
         services.AddScoped<DapperContext>();
         services.AddScoped<ICustomerReadRepository, CustomerReadRepository>();
         services.AddScoped<IProductReadRepository, ProductReadRepository>();
         services.AddScoped<ISaleReadRepository, SaleReadRepository>();
+        services.AddScoped<IGlobalSearchRepository, GlobalSearchRepository>();
+
 
         return services;
 

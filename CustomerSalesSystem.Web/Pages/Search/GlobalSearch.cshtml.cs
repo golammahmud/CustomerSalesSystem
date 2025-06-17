@@ -1,4 +1,5 @@
 ﻿using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Application.Features;
 using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services.IService;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace CustomerSalesSystem.Web.Pages.Search
 
         [FromForm(Name = "userQuery")]
         public string Query { get; set; } = string.Empty;
-        public List<object> Results { get; set; } = new();
+        public IList<GlobalSearchResultDto> SearchResults { get; set; } 
 
 
         public int PageNumber { get; set; }
@@ -196,6 +197,52 @@ Explain its purpose in a friendly, non-technical, and concise way.
                     intent = "fill_field",
                     fields = aiIntent.Entities.Select(e => new { fieldId = e.Field, value = e.Value })
                 });
+            }
+
+            // === Add this block for handling search intent ===
+            if (aiIntent.Intent.StartsWith("Search", StringComparison.OrdinalIgnoreCase))
+            {
+                var searchRequest = new GlobalSearchQuery
+                {
+                    Intent = aiIntent.Intent,
+                    Entities = aiIntent.Entities
+                };
+
+                var response = await ApiClient.PostAsJsonAsync("GlobalSearch", searchRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultList = await response.Content.ReadFromJsonAsync<List<GlobalSearchResultDto>>();
+
+                    if (resultList != null && resultList.Any())
+                    {
+                        SearchResults = resultList; // Assign results to property bound in Razor
+
+                        // If you want to return JSON for ajax call
+                        return new JsonResult(new
+                        {
+                            intent = aiIntent.Intent,
+                            results = resultList,
+                            totalCount = resultList.Count
+                        });
+                    }
+                    else
+                    {
+                        Speak("Sorry, no search data found. Please try again with valid data.");
+
+                        return new JsonResult(new
+                        {
+                            intent = aiIntent.Intent,
+                            results = Array.Empty<GlobalSearchResultDto>(),
+                            totalCount = 0,
+                            message = "No data found"
+                        });
+                    }
+                }
+                else
+                {
+                    return StatusCode((int)response.StatusCode, "Search API call failed.");
+                }
             }
 
             return new JsonResult(new
