@@ -200,17 +200,15 @@ window.onload = () => {
 
 $(document).ready(function () {
     $('#globalSearchForm').on('submit', function (e) {
-        e.preventDefault(); // prevent default submit
+        e.preventDefault(); // Prevent default form submission
 
         let query = $('#searchQuery').val();
-        handleVoiceTranscript(query); // process voice intent
+        if (!query || query.trim() === "") return;
 
-        // You can delay form submission to let `handleVoiceTranscript()` finish
-        setTimeout(() => {
-            this.submit(); // now submit the form after processing
-        }, 200); // small delay (optional, adjust as needed)
+        handleVoiceTranscript(query); // Just reuse your existing AI logic
     });
 });
+
 
 
 // ================================

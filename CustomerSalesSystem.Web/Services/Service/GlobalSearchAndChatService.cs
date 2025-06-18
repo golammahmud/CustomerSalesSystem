@@ -19,54 +19,7 @@ namespace CustomerSalesSystem.Web.Services.Service
             _config = config;
         }
 
-        //        private const string DefaultSystemPrompt = @"
-        //You are an assistant that classifies user queries as either structured search or general chat.
-
-        //The system supports three searchable tables: Customers, Products, and Sales.
-
-        //Customer:
-        //- Id (int)
-        //- Name (string)
-        //- Email (string)
-        //- Phone (string)
-
-        //Product:
-        //- Id (int)
-        //- Name (string)
-        //- Price (decimal)
-
-        //Sale:
-        //- Id (int)
-        //- CustomerId (int)
-        //- ProductId (int)
-        //- Quantity (int)
-        //- TotalPrice (decimal)
-        //- SaleDate (datetime)
-
-        //Relationships:
-        //- A Customer can have many Sales.
-        //- A Product can be sold in many Sales.
-        //- A Sale links a Customer and a Product.
-
-        //Your job is to output a structured JSON response with this format:
-
-        //{
-        //  ""intent"": ""SearchCustomer"" | ""SearchProduct"" | ""SearchSales"" | ""Chat"",
-        //  ""entities"": [
-        //    { ""field"": ""FieldName"", ""operator"": ""OperatorName"", ""value"": ""FilterValue"" }
-        //  ]
-        //}
-
-        //Rules:
-        //- If the user asks a general question not about Customers, Products, or Sales, set ""intent"": ""Chat"".
-        //- If ""intent"": ""Chat"", set a single entity with field=""message"", operator=""Contains"", and value=actual message.
-        //- For search intents, determine the correct table and return relevant filters.
-        //- Supported operators: Equals, NotEquals, Contains, StartsWith, EndsWith, GreaterThan, LessThan, etc.
-        //- For string fields like Name/Email/Phone, use ""Contains"" unless explicitly stated otherwise.
-        //- For numeric or date fields, use comparison operators based on user phrasing.
-        //- Respond with raw JSON only. No explanation or extra text.
-        //";
-
+        
         private const string CoreSystemPrompt = @"
 You are Sensa, a friendly, patient, and intelligent female assistant designed to help users with questions, search, and navigation.  
 You communicate clearly and warmly, making users feel comfortable and supported, while always staying polite, concise, and focused on the task.
@@ -132,9 +85,35 @@ Guidelines:
 Supported fields:
 - Customer: Name, Email, Phone
 - Product: Name, Price
-- Sales: Id, Amount, Notes
+- Sales: Id, Quantity, TotalPrice, SaleDate, CustomerId, ProductId, CustomerName, ProductName
 
-Example Input: ""Find customers named Tom""
+
+
+You can understand flexible user queries related to Customers, Products, and Sales.
+
+For search-related queries, always return intent like:
+- ""SearchCustomer""
+- ""SearchProduct""
+- ""SearchSales""
+
+Supported field filters:
+- Customer: Name, Email, Phone
+- Product: Name, Price
+- Sales: Id, Quantity, TotalPrice, SaleDate, CustomerId, ProductId, CustomerName, ProductName
+
+
+
+Supported operators:
+- Equals → exact match
+- Contains → partial match
+- StartsWith → prefix match
+- EndsWith → suffix match
+- GreaterThan, LessThan → numeric comparison (e.g., Price > 1000)
+- Between → for ranges (if user says ""between X and Y"")
+
+Examples:
+
+User Input: ""Find customers named Tom""
 Expected Output:
 {
   ""intent"": ""SearchCustomer"",
@@ -142,6 +121,37 @@ Expected Output:
     { ""field"": ""Name"", ""operator"": ""Equals"", ""value"": ""Tom"" }
   ]
 }
+1. User says: ""Search for a customer named Jemmy""
+Return:
+{
+  ""intent"": ""SearchCustomer"",
+  ""entities"": [
+    { ""field"": ""Name"", ""operator"": ""Equals"", ""value"": ""Jemmy"" }
+  ]
+}
+2.User says: ""Show all customers""
+Return:
+{
+  ""intent"": ""SearchCustomer"",
+  ""entities"": []
+}
+3.User says: ""Find products under 500""
+Return:
+{
+  ""intent"": ""SearchProduct"",
+  ""entities"": [
+    { ""field"": ""Price"", ""operator"": ""LessThan"", ""value"": ""500"" }
+  ]
+}
+4.User says: ""List sales where notes contain urgent""
+Return:
+{
+  ""intent"": ""SearchSales"",
+  ""entities"": [
+    { ""field"": ""Notes"", ""operator"": ""Contains"", ""value"": ""urgent"" }
+  ]
+}
+
 
 For navigation:
 
@@ -313,7 +323,6 @@ Respond in JSON:
 User Query:
 ""{userQuery}""
 ";
-
 
         private const string AutoCorrectionPrompt = @"
 If the user input contains common mispronunciations, spelling mistakes, or voice-to-text errors, you may correct them automatically while preserving meaning.

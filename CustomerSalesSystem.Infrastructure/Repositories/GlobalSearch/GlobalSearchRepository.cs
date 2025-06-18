@@ -20,48 +20,61 @@ namespace CustomerSalesSystem.Infrastructure.Repositories
             var sqlBuilder = new StringBuilder();
             var parameters = new DynamicParameters();
             var table = "";
-            var navTarget = "";
-            var descriptionSql = "";
-
-            // Step 1: Set table-specific metadata
+            var targetPage = "";
             var allowedFields = new List<string>();
+            var descriptionSql = "";
+            var nameSql = "";
+            var joinClause = "";
+
+            // Step 1: Set metadata based on intent
             switch (request.Intent)
             {
                 case "SearchCustomer":
                     table = "Customers";
-                    navTarget = "EditCustomer";
+                    targetPage = "EditCustomer";
                     allowedFields = new() { "Name", "Email", "Phone" };
-                    descriptionSql = "Email + ' | ' + Phone";
+                    nameSql = "ISNULL(Customers.Name, '')";
+                    descriptionSql = "ISNULL(Customers.Email, '') + ' | ' + ISNULL(Customers.Phone, '')";
                     break;
 
                 case "SearchProduct":
                     table = "Products";
-                    navTarget = "EditProduct";
+                    targetPage = "EditProduct";
                     allowedFields = new() { "Name", "Price" };
-                    descriptionSql = "'Price: $' + CAST(Price AS VARCHAR)";
+                    nameSql = "ISNULL(Products.Name, '')";
+                    descriptionSql = "'Price: $' + CAST(ISNULL(Products.Price, 0) AS VARCHAR)";
                     break;
 
                 case "SearchSales":
                     table = "Sales";
-                    navTarget = "EditSale";
-                    allowedFields = new() { "Id", "Amount", "Notes" };
-                    descriptionSql = "'Amount: $' + CAST(Amount AS VARCHAR)";
+                    targetPage = "EditSale";
+                    allowedFields = new()
+                            {
+                                "Id", "Quantity", "TotalPrice", "SaleDate", "CustomerId", "ProductId",
+                                "CustomerName", "ProductName"
+                            };
+                    nameSql = "'Sale #' + CAST(Sales.Id AS VARCHAR)";
+                    descriptionSql = "ISNULL(Customers.Name, '') + ' | ' + ISNULL(Products.Name, '') + ' | $' + CAST(ISNULL(TotalPrice * Quantity, 0) AS VARCHAR)";
+                    joinClause = @"
+                LEFT JOIN Customers ON Sales.CustomerId = Customers.Id
+                LEFT JOIN Products ON Sales.ProductId = Products.Id";
                     break;
 
                 default:
-                    return new(); // or throw
+                    return new(); // Unknown intent
             }
 
-            // Step 2: Start SQL
-            sqlBuilder.Append($@"
-                SELECT 
-                    '{request.Intent.Replace("Search", "")}' AS [Table],
-                    Id,
-                    {(request.Intent == "SearchSales" ? "'Sale #' + CAST(Id AS VARCHAR)" : "Name")} AS Title,
-                    {descriptionSql} AS Description,
-                    '{navTarget}' AS NavigationTarget
-                FROM {table}
-                WHERE 1=1
+            // Step 2: Build SQL
+                        sqlBuilder.Append($@"
+            SELECT 
+                '{request.Intent.Replace("Search", "")}' AS [Type],
+                {table}.Id,
+                {nameSql} AS [Name],
+                {descriptionSql} AS [Description],
+                '{targetPage}' AS [TargetPage]
+            FROM {table}
+            {joinClause}
+            WHERE 1=1
             ");
 
             // Step 3: Apply filters
@@ -69,22 +82,22 @@ namespace CustomerSalesSystem.Infrastructure.Repositories
             foreach (var filter in request.Entities)
             {
                 if (!allowedFields.Contains(filter.Field, StringComparer.OrdinalIgnoreCase))
-                    continue; // Skip or throw for unknown fields
+                    continue;
 
                 string paramName = $"@param{index++}";
-                string sqlCondition = GetSqlCondition(filter, paramName);
+                string condition = GetSqlCondition(filter, paramName);
 
                 if (bool.TryParse(filter.Value?.ToString(), out var boolVal))
                     parameters.Add(paramName, boolVal ? 1 : 0);
                 else
                     parameters.Add(paramName, filter.Value);
 
-                sqlBuilder.Append(" AND " + sqlCondition);
+                sqlBuilder.Append(" AND " + condition);
             }
 
+            sqlBuilder.Append(" ORDER BY " + table + ".Id DESC");
 
-            sqlBuilder.Append(" ORDER BY [Table]");
-
+            // Step 4: Execute SQL
             var sql = sqlBuilder.ToString();
             var results = await connection.QueryAsync<GlobalSearchResultDto>(sql, parameters);
             return results.ToList();

@@ -3,6 +3,7 @@ using CustomerSalesSystem.Application.Features;
 using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services.IService;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CustomerSalesSystem.Web.Pages.Search
 {
@@ -14,31 +15,62 @@ namespace CustomerSalesSystem.Web.Pages.Search
 
         [FromForm(Name = "userQuery")]
         public string Query { get; set; } = string.Empty;
-        public IList<GlobalSearchResultDto> SearchResults { get; set; } 
 
+        [BindProperty]
+        public IList<GlobalSearchResultDto> SearchResults { get; set; }
+      
+        public string Intent { get; set; }
 
+        
         public int PageNumber { get; set; }
         public int PageSize { get; set; } = 50;
         public int TotalCount { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
-        public List<CustomerDto>? Customers { get; set; }
+ 
         private HttpClient ApiClient => _httpClientFactory.CreateClient("API");
 
-
-        public async Task OnGetAsync(int pageNumber = 1)
+        public async Task<IActionResult> OnGetAsync(string intent, string filters)
         {
-            PageNumber = pageNumber;
+            if (string.IsNullOrWhiteSpace(intent))
+                return Page(); // Do nothing if no intent
 
-            var response = await ApiClient.GetFromJsonAsync<PagedResult<CustomerDto>>(
-                $"customers?pageNumber={PageNumber}&pageSize={PageSize}");
+            Intent = intent;
+            var filterList = new List<AIFieldFilter>();
 
-            if (response is not null)
+            if (!string.IsNullOrWhiteSpace(filters))
             {
-                Customers = response.Items;
-                TotalCount = response.TotalCount;
+                try
+                {
+                    filterList = JsonSerializer.Deserialize<List<AIFieldFilter>>(filters);
+                }
+                catch
+                {
+                    // Handle malformed filters if needed
+                }
             }
+
+            var searchRequest = new GlobalSearchQuery
+            {
+                Intent = intent,
+                Entities = filterList
+            };
+
+            var response = await ApiClient.PostAsJsonAsync("GlobalSearch", searchRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var resultList = await response.Content.ReadFromJsonAsync<List<GlobalSearchResultDto>>();
+                SearchResults = resultList ?? new List<GlobalSearchResultDto>();
+            }
+            else
+            {
+                SearchResults = new List<GlobalSearchResultDto>();
+            }
+
+            return Page();
         }
+
 
         public async Task<IActionResult> OnPostVoiceSearchAsync([FromForm(Name = "userQuery")] string query, [FromForm] string pagePath)
         {
@@ -202,48 +234,13 @@ Explain its purpose in a friendly, non-technical, and concise way.
             // === Add this block for handling search intent ===
             if (aiIntent.Intent.StartsWith("Search", StringComparison.OrdinalIgnoreCase))
             {
-                var searchRequest = new GlobalSearchQuery
+                return new JsonResult(new
                 {
-                    Intent = aiIntent.Intent,
-                    Entities = aiIntent.Entities
-                };
-
-                var response = await ApiClient.PostAsJsonAsync("GlobalSearch", searchRequest);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var resultList = await response.Content.ReadFromJsonAsync<List<GlobalSearchResultDto>>();
-
-                    if (resultList != null && resultList.Any())
-                    {
-                        SearchResults = resultList; // Assign results to property bound in Razor
-
-                        // If you want to return JSON for ajax call
-                        return new JsonResult(new
-                        {
-                            intent = aiIntent.Intent,
-                            results = resultList,
-                            totalCount = resultList.Count
-                        });
-                    }
-                    else
-                    {
-                        Speak("Sorry, no search data found. Please try again with valid data.");
-
-                        return new JsonResult(new
-                        {
-                            intent = aiIntent.Intent,
-                            results = Array.Empty<GlobalSearchResultDto>(),
-                            totalCount = 0,
-                            message = "No data found"
-                        });
-                    }
-                }
-                else
-                {
-                    return StatusCode((int)response.StatusCode, "Search API call failed.");
-                }
+                    intent = aiIntent.Intent,
+                    filters = aiIntent.Entities
+                });
             }
+
 
             return new JsonResult(new
             {

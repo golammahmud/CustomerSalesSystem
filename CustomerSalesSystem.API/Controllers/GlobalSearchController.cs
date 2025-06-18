@@ -14,7 +14,7 @@ namespace CustomerSalesSystem.API.Controllers
             _mediator = mediator;
         }
 
-        [HttpPost("GlobalSearch")]
+        [HttpPost]
         public async Task<ActionResult<List<GlobalSearchResultDto>>> Search([FromBody] GlobalSearchQuery request)
         {
             try
