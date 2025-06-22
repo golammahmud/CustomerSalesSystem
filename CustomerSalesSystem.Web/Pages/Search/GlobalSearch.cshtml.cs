@@ -80,11 +80,16 @@ namespace CustomerSalesSystem.Web.Pages.Search
             //make some correction
             string correctedQuery = TextCorrectionHelper.AutoCorrectVoiceQuery(query);
 
-            var aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery);
-
-            if (aiIntent == null)
-                return StatusCode(500, "AI failed to process the query.");
-
+            //var aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery);
+            AIIntentResult aiIntent =new ();
+            //if (aiIntent == null)
+            //    return StatusCode(500, "AI failed to process the query.");
+             aiIntent = FallbackIntentParser.Parse(correctedQuery);
+            if (aiIntent == null || aiIntent.Intent == "Unknown")
+            {
+                // 🟠 Fallback: Use Local Parser
+               
+            }
 
             if (aiIntent.Intent.Equals("Chat", StringComparison.OrdinalIgnoreCase))
             {
@@ -141,7 +146,6 @@ Explain its purpose in a friendly, non-technical, and concise way.
                     response = reply
                 });
             }
-
 
             if (aiIntent.Intent.Equals("navigate", StringComparison.OrdinalIgnoreCase))
             {
@@ -209,8 +213,6 @@ Explain its purpose in a friendly, non-technical, and concise way.
                 });
             }
 
-
-
             if (aiIntent.Intent == "fill_field")
             {
                 var pageContext = GetContextFromPagePath(pagePath); // Use current path to infer context
@@ -239,6 +241,17 @@ Explain its purpose in a friendly, non-technical, and concise way.
                     intent = aiIntent.Intent,
                     filters = aiIntent.Entities
                 });
+            }
+            if (aiIntent.Intent == "SetUserName")
+            {
+                var name = aiIntent.Entities.FirstOrDefault(e => e.Field == "name")?.Value;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    HttpContext.Session.SetString("UserName", name);
+                    Speak($"Got it! I'll call you {name} from now on.");
+                }
+
+                return new JsonResult(new { intent = "SetUserName", name });
             }
 
 

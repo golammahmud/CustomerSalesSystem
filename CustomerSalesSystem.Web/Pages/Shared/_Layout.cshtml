@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/CustomerSalesSystem.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-
+    @inject IHttpContextAccessor HttpContextAccessor
 </head>
 <body>
     <header>
@@ -112,14 +112,26 @@
                 document.getElementById('stopBtn').addEventListener('click', () => stopVoiceSearch());
             }
 
-       const closeBtn = document.getElementById("closeChatModal");
-        if (closeBtn) {
-            closeBtn.onclick = () => {
-                document.getElementById("chatModal").style.display = "none";
-            };
-        }
+            const closeBtn = document.getElementById("closeChatModal");
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    document.getElementById("chatModal").style.display = "none";
+                };
+            }
         });
     </script>
+    <script>
+        window.userName = "@(HttpContextAccessor.HttpContext?.Session.GetString("UserName") ?? "")";
+        if (window.userName) {
+            speak(`Welcome back, ${window.userName}`);
+        } else {
+            speak("Hello! What's your name?");
+        }
+
+    </script>
+
+
+
     <script>
         const currentPageContext = {
             path: "@Context.Request.Path"

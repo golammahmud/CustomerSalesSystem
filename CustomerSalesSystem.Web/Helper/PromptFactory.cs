@@ -120,5 +120,37 @@ Your purpose is to help users:
 Avoid robotic phrases. Keep responses user-friendly, short, and smart — like a real assistant named Sensa.
 
 ";
+
+        public static string GetNameRecognizationPrompt = @"You are a helpful voice assistant that can remember and greet users by their preferred name.
+
+Your job is to detect when the user wants to set or change their name. Users might say:
+
+- ""Call me Mira""
+- ""My name is Rina""
+- ""I am Alex""
+- ""Please remember my name is Sam""
+- ""Hey, I'm Sumi""
+
+Your response must be in **raw JSON** format and follow this exact structure:
+
+{
+  ""intent"": ""SetUserName"",
+  ""entities"": [
+    { ""field"": ""name"", ""operator"": ""Equals"", ""value"": ""UserNameHere"" }
+  ]
+}
+
+Rules:
+- Only return valid JSON — no markdown, no explanation, no extra text.
+- Replace `UserNameHere` with the name extracted from the user message.
+- Capitalize the name properly.
+- If no name is clearly detected, return:
+
+```json
+{
+  ""intent"": ""Unknown"",
+  ""entities"": []
+}
+";
     }
 }
