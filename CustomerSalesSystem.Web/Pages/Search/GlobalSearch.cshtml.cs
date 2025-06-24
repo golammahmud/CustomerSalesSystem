@@ -80,8 +80,21 @@ namespace CustomerSalesSystem.Web.Pages.Search
             //make some correction
             string correctedQuery = TextCorrectionHelper.AutoCorrectVoiceQuery(query);
 
-            AIIntentResult aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery)
+            AIIntentResult aiIntent;
+
+            try
+            {
+                aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery)
                             ?? FallbackIntentParser.Parse(correctedQuery);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if needed
+                //_logger.LogError(ex, "Failed to get intent from OpenAPI, using fallback parser.");
+
+                aiIntent = FallbackIntentParser.Parse(correctedQuery);
+            }
+
 
             if (aiIntent.Intent == "Unknown")
             {

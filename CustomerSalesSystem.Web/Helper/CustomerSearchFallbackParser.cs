@@ -28,11 +28,10 @@ namespace CustomerSalesSystem.Web.Helper
             var result = new AIQueryResult();
             if (string.IsNullOrWhiteSpace(query)) return result;
 
-            // Normalize field synonyms
             query = NormalizeSynonyms(query.ToLower());
 
-            // Split phrases
             var phrases = query.Split(new[] { " and ", ",", ".", ";", " also ", " with " }, StringSplitOptions.RemoveEmptyEntries);
+            bool hasMatched = false;
 
             foreach (var phrase in phrases)
             {
@@ -43,7 +42,6 @@ namespace CustomerSalesSystem.Web.Helper
                     var fieldName = AllowedFields[field];
                     var op = DetectOperator(phrase, fieldName);
 
-                    // Regex pattern to extract value
                     var pattern = $@"{field}\s*(is|equals|starts with|ends with)?\s*(.+)";
                     var match = Regex.Match(phrase, pattern, RegexOptions.IgnoreCase);
 
@@ -58,14 +56,38 @@ namespace CustomerSalesSystem.Web.Helper
                                 Operator = op,
                                 Value = rawValue
                             });
-                            break; // stop after match
+                            hasMatched = true;
+                            break;
                         }
                     }
                 }
             }
 
+            // Fallback: no match but simple text like "find oliver"
+            // Fallback: no explicit field matched, try treating full query as Name search
+            if (!hasMatched)
+            {
+                foreach (var phrase in phrases)
+                {
+                    var guess = phrase.Trim();
+                    if (!string.IsNullOrWhiteSpace(guess))
+                    {
+                        result.Filters.Add(new AIFieldFilter
+                        {
+                            Field = "Name",
+                            Operator = "Contains",
+                            Value = guess
+                        });
+
+                        break; // Only add one fallback guess
+                    }
+                }
+            }
+
+
             return result;
         }
+
 
         private static string NormalizeSynonyms(string input)
         {
@@ -77,18 +99,22 @@ namespace CustomerSalesSystem.Web.Helper
 
         private static string DetectOperator(string phrase, string field)
         {
-            if (field.Equals("Email", StringComparison.OrdinalIgnoreCase))
+            phrase = phrase.ToLowerInvariant();
+
+            if (field.Equals("Email", StringComparison.OrdinalIgnoreCase) ||
+                field.Equals("Phone", StringComparison.OrdinalIgnoreCase) ||
+                field.Equals("Name", StringComparison.OrdinalIgnoreCase))
             {
-                // Email default is "Contains"
                 if (phrase.Contains("equals")) return "Equals";
+                if (phrase.Contains("starts with")) return "StartsWith";
+                if (phrase.Contains("ends with")) return "EndsWith";
+
+                // Treat "is" as Contains
                 return "Contains";
             }
 
-            if (phrase.Contains("starts with")) return "StartsWith";
-            if (phrase.Contains("ends with")) return "EndsWith";
-            if (phrase.Contains("equals") || Regex.IsMatch(phrase, @"\bis\b")) return "Equals";
-
-            return "Contains";
+            return "Contains"; // Safe fallback
         }
+
     }
 }

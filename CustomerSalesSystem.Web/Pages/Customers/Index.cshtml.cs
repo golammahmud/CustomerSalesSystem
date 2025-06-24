@@ -44,19 +44,33 @@ namespace CustomerSalesSystem.Web.Pages.Customers
             if (string.IsNullOrWhiteSpace(CsSearchQuery))
                 return Page();
 
-            var aiResult = await _filterQueryService.GetFilterQueryFromOpenAPI(CsSearchQuery);
+            AIQueryResult? aiResult = null;
 
+            try
+            {
+                aiResult = await _filterQueryService.GetFilterQueryFromOpenAPI(CsSearchQuery);
+            }
+            catch (Exception ex)
+            {
+                // Optional: log the exception
+                // _logger.LogError(ex, "OpenAPI query failed. Falling back to local parser.");
+                aiResult = CustomerSearchFallbackParser.Parse(CsSearchQuery);
+            }
+
+            // Fallback if result is null or has no filters
             if (aiResult == null || !aiResult.Filters.Any())
             {
                 aiResult = CustomerSearchFallbackParser.Parse(CsSearchQuery);
             }
 
-            if (!aiResult.Filters.Any())
+            // Final check
+            if (aiResult == null || !aiResult.Filters.Any())
             {
                 ModelState.AddModelError("", "Could not understand your query.");
                 Speak("Could not understand your query.");
                 return Page();
             }
+
 
             var searchRequest = new
             {
