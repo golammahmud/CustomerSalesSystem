@@ -99,8 +99,19 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/voicesearch.js"></script>
     @Html.Raw(ViewData["SpeakScript"])
+
+    <script>
+        $(document).ready(function(){
+        window.userName = localStorage.getItem("userName") || "";
+            // if (window.userName) {
+            //     window.speak(`Welcome back, ${window.userName}`);
+            // }
+        });
+
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
             if (document.getElementById('searchQuery') && document.getElementById('voiceBtn')) {
                 initVoiceSearch({
                     inputId: 'searchQuery',
@@ -120,17 +131,6 @@
             }
         });
     </script>
-    <script>
-        window.userName = "@(HttpContextAccessor.HttpContext?.Session.GetString("UserName") ?? "")";
-        if (window.userName) {
-            speak(`Welcome back, ${window.userName}`);
-        } else {
-            speak("Hello! What's your name?");
-        }
-
-    </script>
-
-
 
     <script>
         const currentPageContext = {

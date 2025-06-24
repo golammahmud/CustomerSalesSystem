@@ -367,8 +367,9 @@ Return only raw JSON. No explanation or extra text.
                
                 var messages = new List<object>
                 {
-                     new { role = "system", content = PromptFactory.GetPromptforSensa },
+                     new { role = "system", content = PromptFactory.PromptforSensa },
                      new { role = "system", content = CoreSystemPrompt },
+                     new { role = "system", content = PromptFactory.MasterIntentPrompt },
                      new { role = "system", content = AutoCorrectionPrompt },
                      new { role = "system", content = Fill_field },
                      new { role = "user", content = userQuery }
@@ -423,7 +424,7 @@ Return only raw JSON. No explanation or extra text.
 
                 var messages = new List<object>
                                 {
-                                    new { role = "system", content = PromptFactory.GetPromptforSensa },
+                                    new { role = "system", content = PromptFactory.PromptforSensa },
                                     new { role = "system", content = prompt },
                                     new { role = "system", content = AutoCorrectionPrompt },
                                     new { role = "user", content = userMessage }
@@ -446,8 +447,8 @@ Return only raw JSON. No explanation or extra text.
                
 
                 var messages = new List<object>
-                                {
-                                     new { role = "system", content = PromptFactory.GetPromptforSensa },
+                                {  
+                                     new { role = "system", content = PromptFactory.PromptforSensa },
                                      new { role = "system", content = "You are a helpful assistant providing concise answers for user FAQs in a polite and friendly tone." },
                                      new { role = "user", content = instruction }
                                 };

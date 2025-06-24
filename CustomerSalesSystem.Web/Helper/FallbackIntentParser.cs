@@ -7,24 +7,25 @@ namespace CustomerSalesSystem.Web.Helper
     public static class FallbackIntentParser
     {
         private static readonly Dictionary<string, (string Table, string Type)> SearchableFields = new()
-    {
-        // Customer
-        { "name", ("Customer", "string") },
-        { "email", ("Customer", "string") },
-        { "phone", ("Customer", "string") },
+        {
+            // Customer
+            { "name", ("Customer", "string") },
+            { "email", ("Customer", "email") }, // 👈 special handling
+            { "phone", ("Customer", "string") },
 
-        // Product
-        { "product", ("Product", "string") },
-        { "price", ("Product", "number") },
+            // Product
+            { "product", ("Product", "string") },
+            { "price", ("Product", "number") },
 
-        // Sales
-        { "id", ("Sales", "number") },
-        { "quantity", ("Sales", "number") },
-        { "totalprice", ("Sales", "number") },
-        { "saledate", ("Sales", "date") },
-        { "customername", ("Sales", "string") },
-        { "productname", ("Sales", "string") }
-    };
+            // Sales
+            { "id", ("Sales", "number") },
+            { "quantity", ("Sales", "number") },
+            { "totalprice", ("Sales", "number") },
+            { "saledate", ("Sales", "date") },
+            { "customername", ("Sales", "string") },
+            { "productname", ("Sales", "string") }
+        };
+
 
         private static readonly Dictionary<string, string> NavigationTargets = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -52,9 +53,8 @@ namespace CustomerSalesSystem.Web.Helper
 
         public static AIIntentResult Parse(string query)
         {
-            query = NormalizeFieldSynonyms(query.ToLower()).Trim();
 
-            //query = query.ToLowerInvariant().Trim();
+            query = query.ToLowerInvariant().Trim();
 
             // 1. Navigation
             if (NavigationVerbs.Any(verb => query.Contains(verb)))
@@ -134,24 +134,29 @@ namespace CustomerSalesSystem.Web.Helper
         {
             phrase = phrase.ToLowerInvariant();
 
+            if (fieldType == "email")
+            {
+                if (phrase.Contains("equals")) return "Equals";
+                return "Contains"; // Even if it says "is", still treat as Contains
+            }
+
             if (fieldType == "string")
             {
                 if (phrase.Contains("starts with")) return "StartsWith";
                 if (phrase.Contains("ends with")) return "EndsWith";
-                if (phrase.Contains("equals")) return "Equals";
-                if (phrase.Contains(" is ")) return "Equals"; // cautious match
-                return "Contains"; // default fallback
+                if (phrase.Contains("equals") || Regex.IsMatch(phrase, @"\bis\b")) return "Equals";
+                return "Contains"; // Default for string
             }
 
             if (fieldType == "number" || fieldType == "date")
             {
                 if (phrase.Contains("greater than") || phrase.Contains("more than")) return "GreaterThan";
                 if (phrase.Contains("less than") || phrase.Contains("under")) return "LessThan";
-                if (phrase.Contains("equals") || phrase.Contains(" is ")) return "Equals";
-                return "Equals"; // default fallback for number/date
+                if (phrase.Contains("equals") || Regex.IsMatch(phrase, @"\bis\b")) return "Equals";
+                return "Equals"; // Default fallback for number/date
             }
 
-            return "Equals";
+            return "Equals"; // Safe fallback for unknown types
         }
 
 
@@ -160,45 +165,54 @@ namespace CustomerSalesSystem.Web.Helper
             var entities = new List<AIFieldFilter>();
             query = query.ToLowerInvariant();
 
-            // Split the query into clauses (by 'and', ',', etc.)
-            var phrases = query.Split(new[] { " and ", ",", ".", ";" }, StringSplitOptions.RemoveEmptyEntries);
+            // Split into logical phrases
+            // Split into logical phrases using multiple joiners
+            var phrases = Regex.Split(query, @"\b(and|also|with|whose|that has|having|where|which|as well as|but|while)\b|[,.;]",
+                                      RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                               .Where(p => !string.IsNullOrWhiteSpace(p))
+                               .Select(p => p.Trim())
+                               .ToList();
+
 
             foreach (var phrase in phrases)
             {
-                var cleanedPhrase = phrase.Trim();
+                string cleanedPhrase = phrase.Trim();
 
+                // Normalize synonym words (only within phrase matching, not value)
                 foreach (var field in fields)
                 {
-                    if (!cleanedPhrase.Contains(field.Key)) continue;
-
+                    var normalizedField = NormalizeField(field.Key); // e.g. 'gmail' → 'email'
                     var fieldType = field.Value.Type;
-                    var operatorType = DetectOperator(cleanedPhrase, fieldType);
 
-                    // Regex pattern to find value after key (e.g., "name is lisa", "email equals test@gmail.com")
-                    var pattern = $"{field.Key}\\s*(is|equals|starts with|ends with|greater than|less than)?\\s*(.+)";
-                    var match = Regex.Match(cleanedPhrase, pattern);
+                    // Regex to match patterns like:
+                    // "email is tom@gmail.com", "name starts with tom", etc.
+                    string pattern = $@"\b{normalizedField}\b\s*(is|equals|starts with|ends with|greater than|less than)?\s*(.+)";
+                    var match = Regex.Match(cleanedPhrase, pattern, RegexOptions.IgnoreCase);
 
-                    if (match.Success && match.Groups.Count >= 3)
+                    if (!match.Success || match.Groups.Count < 3)
+                        continue;
+
+                    string rawValue = match.Groups[2].Value.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(rawValue))
                     {
-                        var rawValue = match.Groups[2].Value.Trim();
+                        string detectedOperator = DetectOperator(cleanedPhrase, fieldType);
 
-                        if (!string.IsNullOrWhiteSpace(rawValue))
+                        entities.Add(new AIFieldFilter
                         {
-                            entities.Add(new AIFieldFilter
-                            {
-                                Field = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(field.Key),
-                                Operator = operatorType,
-                                Value = rawValue
-                            });
+                            Field = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(field.Key), // original field key, not normalized
+                            Operator = detectedOperator,
+                            Value = rawValue
+                        });
 
-                            break; // Found one valid field match in this phrase, skip to next phrase
-                        }
+                        break; // One field match per phrase
                     }
                 }
             }
 
             return entities;
         }
+
         private static readonly Dictionary<string, string> FieldSynonyms = new()
 {
     // Customer
@@ -218,117 +232,114 @@ namespace CustomerSalesSystem.Web.Helper
     { "product", "productname" },
     { "quantity sold", "quantity" }
 };
-        private static string NormalizeFieldSynonyms(string query)
+        private static string NormalizeField(string field)
         {
-            foreach (var synonym in FieldSynonyms)
-            {
-                query = query.Replace(synonym.Key, synonym.Value, StringComparison.OrdinalIgnoreCase);
-            }
-            return query;
+            if (FieldSynonyms.TryGetValue(field.ToLowerInvariant(), out var normalized))
+                return normalized;
+
+            return field.ToLowerInvariant();
         }
-
-
     }
-
-    //public static class FallbackIntentParser
-    //{
-    //    private static readonly Dictionary<string, (string Table, string Type)> SearchableFields = new()
-    //{
-    //    // Customer
-    //    { "name", ("Customer", "string") },
-    //    { "email", ("Customer", "string") },
-    //    { "phone", ("Customer", "string") },
-
-    //    // Product
-    //    { "product", ("Product", "string") },
-    //    { "price", ("Product", "number") },
-
-    //    // Sales
-    //    { "id", ("Sales", "number") },
-    //    { "quantity", ("Sales", "number") },
-    //    { "totalprice", ("Sales", "number") },
-    //    { "saledate", ("Sales", "date") },
-    //    { "customername", ("Sales", "string") },
-    //    { "productname", ("Sales", "string") }
-    //};
-
-    //    public static AIIntentResult Parse(string query)
-    //    {
-    //        var intent = GetSearchIntent(query);
-    //        if (intent == "Unknown")
-    //            return new AIIntentResult { Intent = "Unknown", Entities = new List<AIFieldFilter>() };
-
-    //        var entities = ExtractEntities(query, SearchableFields);
-    //        return new AIIntentResult
-    //        {
-    //            Intent = intent,
-    //            Entities = entities
-    //        };
-    //    }
-
-    //    private static string GetSearchIntent(string query)
-    //    {
-    //        query = query.ToLowerInvariant();
-    //        if (query.Contains("customer")) return "SearchCustomer";
-    //        if (query.Contains("product")) return "SearchProduct";
-    //        if (query.Contains("sale") || query.Contains("sales")) return "SearchSales";
-    //        return "Unknown";
-    //    }
-
-    //    private static string DetectOperator(string phrase, string fieldType)
-    //    {
-    //        phrase = phrase.ToLower();
-    //        if (fieldType == "string")
-    //        {
-    //            if (phrase.Contains("starts with")) return "StartsWith";
-    //            if (phrase.Contains("ends with")) return "EndsWith";
-    //            if (phrase.Contains("equals") || phrase.Contains("is")) return "Equals";
-    //            return "Contains";
-    //        }
-
-    //        if (fieldType == "number" || fieldType == "date")
-    //        {
-    //            if (phrase.Contains("greater than") || phrase.Contains("more than")) return "GreaterThan";
-    //            if (phrase.Contains("less than") || phrase.Contains("under")) return "LessThan";
-    //            if (phrase.Contains("equals") || phrase.Contains("is")) return "Equals";
-    //            return "Equals";
-    //        }
-
-    //        return "Equals";
-    //    }
-
-    //    private static List<AIFieldFilter> ExtractEntities(string query, Dictionary<string, (string Table, string Type)> fields)
-    //    {
-    //        var entities = new List<AIFieldFilter>();
-    //        query = query.ToLower();
-
-    //        foreach (var field in fields)
-    //        {
-    //            if (!query.Contains(field.Key)) continue;
-
-    //            var fieldType = field.Value.Type;
-    //            var operatorType = DetectOperator(query, fieldType);
-
-    //            var valueStart = query.IndexOf(field.Key) + field.Key.Length;
-    //            var value = query.Substring(valueStart).Split(new[] { " and ", ",", ".", "with", "of" }, StringSplitOptions.RemoveEmptyEntries)[0];
-
-    //            value = value.Replace("is", "").Replace("equals", "").Replace("starts with", "")
-    //                         .Replace("ends with", "").Replace("greater than", "")
-    //                         .Replace("less than", "").Replace(":", "").Trim();
-
-    //            if (!string.IsNullOrWhiteSpace(value))
-    //            {
-    //                entities.Add(new AIFieldFilter
-    //                {
-    //                    Field = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(field.Key),
-    //                    Operator = operatorType,
-    //                    Value = value
-    //                });
-    //            }
-    //        }
-
-    //        return entities;
-    //    }
-    //}
-
 }
+//public static class FallbackIntentParser
+//{
+//    private static readonly Dictionary<string, (string Table, string Type)> SearchableFields = new()
+//{
+//    // Customer
+//    { "name", ("Customer", "string") },
+//    { "email", ("Customer", "string") },
+//    { "phone", ("Customer", "string") },
+
+//    // Product
+//    { "product", ("Product", "string") },
+//    { "price", ("Product", "number") },
+
+//    // Sales
+//    { "id", ("Sales", "number") },
+//    { "quantity", ("Sales", "number") },
+//    { "totalprice", ("Sales", "number") },
+//    { "saledate", ("Sales", "date") },
+//    { "customername", ("Sales", "string") },
+//    { "productname", ("Sales", "string") }
+//};
+
+//    public static AIIntentResult Parse(string query)
+//    {
+//        var intent = GetSearchIntent(query);
+//        if (intent == "Unknown")
+//            return new AIIntentResult { Intent = "Unknown", Entities = new List<AIFieldFilter>() };
+
+//        var entities = ExtractEntities(query, SearchableFields);
+//        return new AIIntentResult
+//        {
+//            Intent = intent,
+//            Entities = entities
+//        };
+//    }
+
+//    private static string GetSearchIntent(string query)
+//    {
+//        query = query.ToLowerInvariant();
+//        if (query.Contains("customer")) return "SearchCustomer";
+//        if (query.Contains("product")) return "SearchProduct";
+//        if (query.Contains("sale") || query.Contains("sales")) return "SearchSales";
+//        return "Unknown";
+//    }
+
+//    private static string DetectOperator(string phrase, string fieldType)
+//    {
+//        phrase = phrase.ToLower();
+//        if (fieldType == "string")
+//        {
+//            if (phrase.Contains("starts with")) return "StartsWith";
+//            if (phrase.Contains("ends with")) return "EndsWith";
+//            if (phrase.Contains("equals") || phrase.Contains("is")) return "Equals";
+//            return "Contains";
+//        }
+
+//        if (fieldType == "number" || fieldType == "date")
+//        {
+//            if (phrase.Contains("greater than") || phrase.Contains("more than")) return "GreaterThan";
+//            if (phrase.Contains("less than") || phrase.Contains("under")) return "LessThan";
+//            if (phrase.Contains("equals") || phrase.Contains("is")) return "Equals";
+//            return "Equals";
+//        }
+
+//        return "Equals";
+//    }
+
+//    private static List<AIFieldFilter> ExtractEntities(string query, Dictionary<string, (string Table, string Type)> fields)
+//    {
+//        var entities = new List<AIFieldFilter>();
+//        query = query.ToLower();
+
+//        foreach (var field in fields)
+//        {
+//            if (!query.Contains(field.Key)) continue;
+
+//            var fieldType = field.Value.Type;
+//            var operatorType = DetectOperator(query, fieldType);
+
+//            var valueStart = query.IndexOf(field.Key) + field.Key.Length;
+//            var value = query.Substring(valueStart).Split(new[] { " and ", ",", ".", "with", "of" }, StringSplitOptions.RemoveEmptyEntries)[0];
+
+//            value = value.Replace("is", "").Replace("equals", "").Replace("starts with", "")
+//                         .Replace("ends with", "").Replace("greater than", "")
+//                         .Replace("less than", "").Replace(":", "").Trim();
+
+//            if (!string.IsNullOrWhiteSpace(value))
+//            {
+//                entities.Add(new AIFieldFilter
+//                {
+//                    Field = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(field.Key),
+//                    Operator = operatorType,
+//                    Value = value
+//                });
+//            }
+//        }
+
+//        return entities;
+//    }
+//}
+
+

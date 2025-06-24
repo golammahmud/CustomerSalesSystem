@@ -1,4 +1,5 @@
 using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -45,7 +46,12 @@ namespace CustomerSalesSystem.Web.Pages.Customers
 
             var aiResult = await _filterQueryService.GetFilterQueryFromOpenAPI(CsSearchQuery);
 
-            if (aiResult == null || aiResult.Filters.Count == 0)
+            if (aiResult == null || !aiResult.Filters.Any())
+            {
+                aiResult = CustomerSearchFallbackParser.Parse(CsSearchQuery);
+            }
+
+            if (!aiResult.Filters.Any())
             {
                 ModelState.AddModelError("", "Could not understand your query.");
                 Speak("Could not understand your query.");

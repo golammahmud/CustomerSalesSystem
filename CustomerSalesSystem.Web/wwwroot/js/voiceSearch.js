@@ -156,7 +156,8 @@ window.initVoiceSearch = function ({
  */
 window.startVoiceSearch = () => {
     if (recognition && !isListening) {
-        window.speak("Sensa here. How can I assist you?", language);
+        const namePart = window.userName ? ' ' + window.userName : ' you';
+        window.speak(`Sensa here. How can I assist${namePart}?`, language);
         recognition.start();
     }
 };
@@ -233,8 +234,10 @@ function handleVoiceTranscript(transcript) {
         })
         .then(data => {
             if (chatStatus) chatStatus.textContent = "";
+            console.log("Intent received hfghfg:", data.intent + "entities" + data.entities);
 
             switch (data.intent?.toLowerCase()) {
+
                 case "chat":
                     displayChatResponse(transcript, data.response);
                     break;
@@ -259,6 +262,25 @@ function handleVoiceTranscript(transcript) {
                         }
                     }
                     break;
+
+                case "setusername":
+                    
+                    if (Array.isArray(data.entities) && data.entities.length > 0) {
+                        const nameEntity = data.entities.find(e => e.field?.toLowerCase() === "name");
+                        if (nameEntity?.value) {
+                            const userName = nameEntity.value;
+                            localStorage.setItem("userName", userName);
+                            window.userName = userName;
+                            speak(data.message || `Nice to meet you, ${userName}`);
+                        } else {
+                            speak("I couldn't find your name in the response.");
+                        }
+                    } else {
+                        speak(data.message || "Sorry, I couldn't catch your name.");
+                    }
+                    break;
+
+
                 case "searchcustomer":
                 case "searchproduct":
                 case "searchsales":

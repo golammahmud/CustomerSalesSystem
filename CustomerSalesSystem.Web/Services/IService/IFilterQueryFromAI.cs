@@ -1,4 +1,6 @@
-﻿namespace CustomerSalesSystem.Web.Services
+﻿using CustomerSalesSystem.Application.DTOs;
+
+namespace CustomerSalesSystem.Web.Services
 {
     public interface IFilterQueryFromAIService
     {

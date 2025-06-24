@@ -18,16 +18,16 @@ namespace CustomerSalesSystem.Web.Pages.Search
 
         [BindProperty]
         public IList<GlobalSearchResultDto> SearchResults { get; set; }
-      
+
         public string Intent { get; set; }
 
-        
+
         public int PageNumber { get; set; }
         public int PageSize { get; set; } = 50;
         public int TotalCount { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
- 
+
         private HttpClient ApiClient => _httpClientFactory.CreateClient("API");
 
         public async Task<IActionResult> OnGetAsync(string intent, string filters)
@@ -80,16 +80,19 @@ namespace CustomerSalesSystem.Web.Pages.Search
             //make some correction
             string correctedQuery = TextCorrectionHelper.AutoCorrectVoiceQuery(query);
 
-            //var aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery);
-            AIIntentResult aiIntent =new ();
-            //if (aiIntent == null)
-            //    return StatusCode(500, "AI failed to process the query.");
-             aiIntent = FallbackIntentParser.Parse(correctedQuery);
-            if (aiIntent == null || aiIntent.Intent == "Unknown")
+            AIIntentResult aiIntent = await _filterQueryService.GetFilterQueryFromOpenAPI(correctedQuery)
+                            ?? FallbackIntentParser.Parse(correctedQuery);
+
+            if (aiIntent.Intent == "Unknown")
             {
-                // 🟠 Fallback: Use Local Parser
-               
+                // Optional: Handle totally unprocessable queries (both AI and fallback failed)
+                return new JsonResult(new
+                {
+                    intent = "Unknown",
+                    message = "Sorry, I couldn't understand the search request."
+                });
             }
+
 
             if (aiIntent.Intent.Equals("Chat", StringComparison.OrdinalIgnoreCase))
             {
@@ -242,17 +245,33 @@ Explain its purpose in a friendly, non-technical, and concise way.
                     filters = aiIntent.Entities
                 });
             }
+
             if (aiIntent.Intent == "SetUserName")
             {
                 var name = aiIntent.Entities.FirstOrDefault(e => e.Field == "name")?.Value;
                 if (!string.IsNullOrWhiteSpace(name))
                 {
-                    HttpContext.Session.SetString("UserName", name);
-                    Speak($"Got it! I'll call you {name} from now on.");
+                    return new JsonResult(new
+                    {
+                        intent = "setusername",
+                        entities = new[]
+                        {
+                new { field = "name", operators = "Equals", value = name }
+            },
+                        message = $"Hi {name}, nice to meet you! I’ll remember your name."
+                    });
                 }
 
-                return new JsonResult(new { intent = "SetUserName", name });
+                return new JsonResult(new
+                {
+                    intent = "setusername",
+                    entities = Array.Empty<object>(),
+                    message = "Sorry, I couldn't catch your name. Could you repeat it?"
+                });
             }
+
+
+
 
 
             return new JsonResult(new

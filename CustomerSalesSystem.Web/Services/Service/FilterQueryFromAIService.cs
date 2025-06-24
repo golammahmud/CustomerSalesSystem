@@ -155,11 +155,11 @@ Rules:
     //    public Dictionary<string, object> Filters { get; set; } = new Dictionary<string, object>();
     //}
 
-    public class AIQueryResult
-    {
-        [JsonPropertyName("filters")]
-        public List<AIFieldFilter> Filters { get; set; } = new();
-    }
+    //public class AIQueryResult
+    //{
+    //    [JsonPropertyName("filters")]
+    //    public List<AIFieldFilter> Filters { get; set; } = new();
+    //}
 
 
 }

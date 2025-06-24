@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 //{
 //    client.BaseAddress = new Uri("https://customersalessystemapi-dya6h3fjfvfvcxfd.canadacentral-01.azurewebsites.net/api/");
 //});
-
+builder.Services.AddHttpContextAccessor();
 var apiBaseUrl = builder.Configuration["ApiBaseUrls:CustomerSalesApi"];
 
 builder.Services.AddHttpClient("API", client =>
@@ -30,6 +30,15 @@ builder.Services.AddScoped<IGlobalSearchAndChatService, GlobalSearchAndChatServi
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+
+// For .NET 6+ (Program.cs)
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session timeout
+    options.Cookie.HttpOnly = true; // Security: HTTP-only cookie
+    options.Cookie.IsEssential = true; // GDPR compliance
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -44,7 +53,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 app.MapRazorPages();
