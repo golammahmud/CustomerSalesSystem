@@ -2,6 +2,11 @@
 {
     public static class PageNavigation
     {
+        #region user
+        public static string Login => "/Security/Login";
+        public static string Register => "/Security/Register";
+
+        #endregion User
         #region search
         public static string GlobalSearch => "/Search/GlobalSearch";
         #endregion search

@@ -1,0 +1,145 @@
+﻿@page
+@model CustomerSalesSystem.Web.Pages.Security.LoginModel
+@{
+    ViewData["Title"] = "Login - Customer Sales System BD";
+    Layout = "_LayoutAuth"; // use minimal layout
+}
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+
+    .login-card {
+        background: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 360px;
+        max-width: 90%;
+        text-align: center;
+    }
+
+    .logo-title {
+        font-size: 22px;
+        font-weight: bold;
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+
+    .login-card h2 {
+        margin-bottom: 25px;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+    .register-link {
+        margin-top: 18px;
+        font-size: 14px;
+    }
+
+        .register-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+            .register-link a:hover {
+                text-decoration: underline;
+            }
+
+    .validation-error {
+        color: red;
+        font-size: 13px;
+        margin-top: 5px;
+        display: block;
+    }
+</style>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <p>@Model.Message</p>
+}
+
+@foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+{
+    <p style="color:red">@error.ErrorMessage</p>
+}
+
+<div class="login-card">
+    <div class="logo-title">Customer Sales System BD</div>
+    <h2>Login</h2>
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="LoginRequest.Username"></label>
+            <input asp-for="LoginRequest.Username" />
+            <span asp-validation-for="LoginRequest.Username" class="validation-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="LoginRequest.Password"></label>
+            <input asp-for="LoginRequest.Password" type="password" />
+            <span asp-validation-for="LoginRequest.Password" class="validation-error"></span>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+
+    <div class="register-link">
+        Don’t have an account? <a asp-page="/Security/Register">Register here</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

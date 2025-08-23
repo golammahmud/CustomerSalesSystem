@@ -3,29 +3,25 @@ using CustomerSalesSystem.Application.Features.Products.Commands;
 
 namespace CustomerSalesSystem.Web.Services.Service
 {
-    public class ProductService
+    public class ProductService: BaseService
     {
-        private readonly HttpClient _httpClient;
-
-        public ProductService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        public ProductService(IHttpContextAccessor accessor, IHttpClientFactory factory)
+        : base(accessor, factory) { }
 
         public async Task<List<ProductDto>> GetAllAsync() =>
-            await _httpClient.GetFromJsonAsync<List<ProductDto>>("api/products");
+            await Client.GetFromJsonAsync<List<ProductDto>>("api/products");
 
         public async Task<ProductDto?> GetByIdAsync(int id) =>
-            await _httpClient.GetFromJsonAsync<ProductDto>($"api/products/{id}");
+            await Client.GetFromJsonAsync<ProductDto>($"api/products/{id}");
 
         public async Task CreateAsync(CreateProductCommand product) =>
-            await _httpClient.PostAsJsonAsync("api/products", product);
+            await Client.PostAsJsonAsync("api/products", product);
 
         public async Task UpdateAsync(UpdateProductCommand product) =>
-            await _httpClient.PutAsJsonAsync($"api/products/{product.Id}", product);
+            await Client.PutAsJsonAsync($"api/products/{product.Id}", product);
 
         public async Task DeleteAsync(int id) =>
-            await _httpClient.DeleteAsync($"api/products/{id}");
+            await Client.DeleteAsync($"api/products/{id}");
     }
 
 }
