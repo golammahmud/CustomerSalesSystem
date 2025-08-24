@@ -17,14 +17,10 @@ namespace CustomerSalesSystem.Application.Features.User.Commands
         {
             // 1. Fetch user by username
             var user = await _userReadRepository.GetUserByUsernameAsync(request.Username);
-            if (user == null)
-                throw new Exception("Invalid username or password");
-          
-            // 2. Verify password
-            if (!BCrypt.Net.BCrypt.Verify(request.Password.Trim(),user.PasswordHash))
+            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password.Trim(), user.PasswordHash))
                 throw new Exception("Invalid username or password");
 
-            // 3. Prepare claims for JWT
+            // 2. Prepare claims for JWT
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

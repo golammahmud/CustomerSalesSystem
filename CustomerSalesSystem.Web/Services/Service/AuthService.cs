@@ -20,15 +20,15 @@ namespace CustomerSalesSystem.Web.Services.Service
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,// Prevent CSRF attacks
-                Expires = DateTime.UtcNow.AddMinutes(15) // Match access token expiry
+                SameSite = SameSiteMode.None,// Prevent CSRF attacks
+                Expires = DateTime.UtcNow.AddSeconds(30) // Match access token expiry
             };
 
             _refreshTokenCookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,// Prevent CSRF attacks
+                SameSite = SameSiteMode.None,// Prevent CSRF attacks
                 Expires = DateTime.UtcNow.AddDays(7),
                 Path = "/api/user/refresh" // Only sent to refresh endpoint
             };

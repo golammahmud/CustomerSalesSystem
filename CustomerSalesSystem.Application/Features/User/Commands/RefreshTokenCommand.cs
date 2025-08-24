@@ -23,30 +23,35 @@ namespace CustomerSalesSystem.Application.Features.User.Commands
 
             // 1. Fetch user by refresh token
             var user = await _userReadRepository.GetUserByRefreshTokenAsync(request.RefreshToken);
-            if (user == null)
-                throw new Exception("Invalid refresh token");
-            if (user.RefreshTokenExpiryTime < DateTime.UtcNow)
-                throw new Exception("Refresh token has expired");
+            if (user == null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+                throw new Exception("Invalid or expired refresh token");
+
             // 2. Verify hashed refresh token
             if (!BCrypt.Net.BCrypt.Verify(request.RefreshToken, user.RefreshTokenHash))
                 throw new Exception("Invalid refresh token");
+
             // 3. Prepare claims for JWT
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username)
             };
+
             // 4. Generate new tokens
             var accessToken = _tokenService.GenerateAccessToken(claims);
             var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+
             // 5. Save new hashed refresh token and expiry to DB
             var userEntity = await _userRepository.GetUserByIdAsync(user.Id);
             if (userEntity == null)
                 throw new Exception("User not found");
+
             // Hash the new refresh token before saving
             userEntity.RefreshTokenHash = BCrypt.Net.BCrypt.HashPassword(newRefreshToken);
             userEntity.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 days expiry
             await _userRepository.UpdateUserAsync(userEntity);
+
             // 6. Return DTO
             return new LoginResponseDTO
             {

@@ -96,8 +96,8 @@ namespace CustomerSalesSystem.Web.Helper
             var refreshToken = GetRefreshTokenFromCookie();
             if (string.IsNullOrEmpty(refreshToken)) return false;
 
-            var client = _httpClientFactory.CreateClient("AuthClient");
-            var response = await client.PostAsJsonAsync("api/auth/refresh", new { refreshToken });
+            var client = _httpClientFactory.CreateClient("API");
+            var response = await client.PostAsJsonAsync("user/refresh", new { refreshToken });
 
             if (!response.IsSuccessStatusCode) return false;
 
@@ -109,8 +109,8 @@ namespace CustomerSalesSystem.Web.Helper
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(15) // Match token expiry
+                SameSite = SameSiteMode.None,
+                Expires = DateTime.UtcNow.AddSeconds(30) // Match token expiry
             };
 
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("access_token", tokenResult.AccessToken, cookieOptions);
@@ -120,9 +120,9 @@ namespace CustomerSalesSystem.Web.Helper
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(7),
-                Path = "/api/auth" // Limit to refresh endpoint
+                Path = "/api/user" // Limit to refresh endpoint
             };
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("refresh_token", tokenResult.RefreshToken, refreshCookieOptions);
 

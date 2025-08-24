@@ -1,0 +1,289 @@
+﻿@using static CustomerSalesSystem.Web.Pages.BasePageModel
+@* Do not modify this partial it might be used several places  *@
+
+@model PopUpModel
+
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@Html.AntiForgeryToken()
+
+<div class="modal fade" id="@Model.ModalId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title">@Model.Title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="@Model.FormId"
+                      method="post"
+                      asp-page-handler="@Model.Handler"
+                      asp-page="@Model.Page">
+                    @Html.AntiForgeryToken()
+
+                    @foreach (var field in Model.Fields)
+                    {
+                        if (field.Type == "hidden")
+                        {
+                            <input type="hidden" name="@field.Name" value="@field.Value" />
+                        }
+                        else if (field.Type == "dropdown")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@field.Label</label>
+                                <select name="@field.Name" class="form-select">
+                                    @foreach (var option in field.Options ?? Enumerable.Empty<SelectOption>())
+                                    {
+                                        <option value="@option.Value" selected="@(option.Value == field.Value)">
+                                            @option.Text
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else if (field.Type == "checkbox")
+                        {
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input"
+                                       name="@field.Name"
+                                       value="true"
+                                       @(field.Value?.ToString().ToLower() == "true" ? "checked" : "") />
+                                <label class="form-check-label">@field.Label</label>
+                            </div>
+                        }
+                        else if (field.Type == "textarea")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@field.Label</label>
+                                <textarea class="form-control"
+                                  name="@field.Name">@field.Value</textarea>
+                            </div>
+                        }
+                        else if (field.Type == "datetime" || field.Type == "datetime-local")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@field.Label</label>
+                                <input type="datetime-local" class="form-control"
+                                       name="@field.Name"
+                                       value="@field.Value" />
+                            </div>
+                        }
+                        else if (field.Type == "email")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@field.Label</label>
+                                <input type="email" class="form-control"
+                                       name="@field.Name"
+                                       value="@field.Value" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@field.Label</label>
+                                <input type="@field.Type" class="form-control"
+                                       name="@field.Name"
+                                       value="@field.Value" />
+                            </div>
+                        }
+                    }
+                </form>
+
+                <div class="alert alert-success d-none mt-2" id="@Model.FormId-success">Saved successfully!</div>
+                <div class="alert alert-danger d-none mt-2" id="@Model.FormId-error">Something went wrong!</div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary submit-modal" data-form="@Model.FormId">@Model.ButtonTitle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // 1️⃣ Auto-fill modal fields from data-* attributes
+    document.addEventListener("click", function(e) {
+        const target = e.target.closest(".open-modal");
+        if (!target) return;
+
+        const modalId = target.getAttribute("data-bs-target") || "#updateChildModal";
+        const modal = document.getElementById(modalId.replace("#",""));
+        if (!modal) return;
+
+        const form = modal.querySelector("form");
+        if (!form) return;
+
+        Array.from(target.attributes).forEach(attr => {
+            if (attr.name.startsWith("data-") && !["data-bs-toggle","data-bs-target"].includes(attr.name)) {
+                const fieldName = attr.name.replace("data-", "");
+                const input = Array.from(form.elements)
+                                   .find(i => i.name.toLowerCase() === fieldName.toLowerCase());
+               if (input) {
+                // Convert "null", undefined, or empty values into ""
+                input.value = (attr.value && attr.value !== "null") ? attr.value : "";
+            }
+            }
+        });
+    });
+
+
+        // 2️⃣ Generic AJAX submit for any modal
+        document.querySelectorAll(".submit-modal").forEach(btn => {
+            btn.addEventListener("click", function () {
+                let formId = this.dataset.form;
+                let form = document.getElementById(formId);
+                let url = form.getAttribute("action") || window.location.href;
+
+                // Debug: log values being sent
+                console.log("FormData to send:", [...new FormData(form)].map(x => x.join("=")).join("&"));
+
+                fetch(url, {
+                    method: "POST",
+                    data: {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: new FormData(form)
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(formId + "-success").classList.remove("d-none");
+                        document.getElementById(formId + "-error").classList.add("d-none");
+
+                        setTimeout(() => {
+                            let modal = bootstrap.Modal.getInstance(document.getElementById(form.closest(".modal").id));
+                            modal.hide();
+                            location.reload(); // optional: refresh grid or row only
+                        }, 800);
+                    } else {
+                        document.getElementById(formId + "-error").classList.remove("d-none");
+                        document.getElementById(formId + "-success").classList.add("d-none");
+                    }
+                })
+                .catch(() => {
+                    document.getElementById(formId + "-error").classList.remove("d-none");
+                });
+            });
+        });
+
+    });
+</script>
+
+@* 
+    ===============================
+    ModalField Reference for Devs
+    ===============================
+    Use this structure to define fields inside modals.
+    Each ModalField supports:
+      - Label   → Display name for the field (can be blank for hidden fields)
+      - Name    → Field name (will be used in form POST)
+      - Type    → Input type (text, email, number, date, hidden, password, select, checkbox, radio, textarea)
+      - Value   → Default/pre-filled value (optional)
+      - Options → For dropdown, checkbox, or radio (List<SelectOption>)
+    ===============================
+*@
+
+@* ---------- Hidden Field ---------- *@
+@* var hiddenField = new ModalField
+{
+    Label = "",
+    Name = "Id",
+    Type = "hidden",
+    Value = "" // hidden value
+}; *@
+
+@* ---------- Text Field ---------- *@
+@* var textField = new ModalField
+{
+    Label = "CVJ Number",
+    Name = "CVJNumber",
+    Type = "text",
+    Value = "" // default text
+};
+ *@
+@* ---------- Email Field ---------- *@
+@* var emailField = new ModalField
+{
+    Label = "Email Address",
+    Name = "Email",
+    Type = "email",
+    Value = ""
+}; *@
+
+@* ---------- Password Field ---------- *@
+@* var passwordField = new ModalField
+{
+    Label = "Password",
+    Name = "Password",
+    Type = "password",
+    Value = ""
+}; *@
+
+@* ---------- Number Field ---------- *@
+@* var numberField = new ModalField
+{
+    Label = "Age",
+    Name = "Age",
+    Type = "number",
+    Value = ""
+};
+ *@
+@* ---------- Date Field ---------- *@
+@* var dateField = new ModalField
+{
+    Label = "Date of Birth",
+    Name = "DOB",
+    Type = "date",
+    Value = ""
+}; *@
+
+@* ---------- Select (Dropdown) Field ---------- *@
+@* var selectField = new ModalField
+{
+    Label = "Status",
+    Name = "Status",
+    Type = "select",
+    Options = new[]
+    {
+        new SelectOption { Value = "Active", Text = "Active" },
+        new SelectOption { Value = "Inactive", Text = "Inactive" }
+    }
+}; *@
+
+@* ---------- Checkbox Field ---------- *@
+@* var checkboxField = new ModalField
+{
+    Label = "I agree to terms",
+    Name = "Terms",
+    Type = "checkbox",
+    Options = new[]
+    {
+        new SelectOption { Value = "true", Text = "Agree" }
+    }
+}; *@
+
+@* ---------- Radio Button Field ---------- *@
+@* var radioField = new ModalField
+{
+    Label = "Gender",
+    Name = "Gender",
+    Type = "radio",
+    Options = new[]
+    {
+        new SelectOption { Value = "Male", Text = "Male" },
+        new SelectOption { Value = "Female", Text = "Female" }
+    }
+}; *@
+
+@* ---------- Textarea Field ---------- *@
+@* var textareaField = new ModalField
+{
+    Label = "Remarks",
+    Name = "Remarks",
+    Type = "textarea",
+    Value = ""
+};
+ *@

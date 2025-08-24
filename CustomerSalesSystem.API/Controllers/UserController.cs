@@ -1,5 +1,7 @@
-﻿using CustomerSalesSystem.API.Services;
+﻿using Azure.Core;
+using CustomerSalesSystem.API.Services;
 using CustomerSalesSystem.Application.Features.User.Commands;
+using CustomerSalesSystem.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -66,8 +68,29 @@ namespace CustomerSalesSystem.API.Controllers
                 if (loginResponse == null)
                     return Unauthorized("Invalid username or password.");
 
-                // Return access and refresh tokens
-                return Ok(loginResponse);
+                // Set cookies (HttpOnly + Secure + SameSite=None for cross-domain)
+                Response.Cookies.Append("access_token", loginResponse.AccessToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Path = "/"
+                });
+
+                Response.Cookies.Append("refresh_token", loginResponse.RefreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Path = "/"
+                });
+
+                // Optionally return some basic info (user id, name, etc.)
+                return Ok(new
+                {
+                    loginResponse,
+                    message = "Login successful"
+                });
             }
             catch (Exception ex)
             {

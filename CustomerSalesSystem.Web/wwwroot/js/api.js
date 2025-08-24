@@ -1,48 +1,68 @@
-﻿import apiClient from "./apiClient.js"; // note the .js extension
+﻿const API_BASE = "https://localhost:7120/api/";
 
+async function fetchClient(url, options = {}) {
+    const defaultOptions = {
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    };
+
+    const finalOptions = { ...defaultOptions, ...options };
+    finalOptions._retry = finalOptions._retry || false; // add retry flag
+
+    const response = await fetch(`${API_BASE}${url}`, finalOptions);
+
+    if (response.status === 401 && !finalOptions._retry) {
+        finalOptions._retry = true; // prevent infinite retry
+
+        const refreshResponse = await fetch(`${API_BASE}user/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (refreshResponse.ok) {
+            // Retry original request once
+            return fetchClient(url, finalOptions);
+        } else {
+            throw new Error('Session expired. Please log in again.');
+        }
+    }
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+// Customer API
 export const customerAPI = {
-    getAll: (pageNumber, pageSize) => apiClient.get(`/customers`, { params: { pageNumber, pageSize } }),
-    getById: (id) => apiClient.get(`/customers/${id}`),
-    create: (data) => apiClient.post(`/customers`, data),
-    update: (id, data) => apiClient.put(`/customers/${id}`, data),
-    delete: (id) => apiClient.delete(`/customers/${id}`),
+    getAll: (pageNumber, pageSize) => fetchClient(`customers?pageNumber=${pageNumber}&pageSize=${pageSize}`),
+    getById: (id) => fetchClient(`customers/${id}`),
+    create: (data) => fetchClient(`customers`, { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => fetchClient(`customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => fetchClient(`customers/${id}`, { method: 'DELETE' }),
 };
 
+// Sales API
 export const salesAPI = {
-    getAll: () => apiClient.get(`/sales`),
-    getById: (id) => apiClient.get(`/sales/${id}`),
-    create: (data) => apiClient.post(`/sales`, data),
-    delete: (id) => apiClient.delete(`/sales/${id}`),
-    filter: (customerId, date) => apiClient.get(`/sales/filter`, { params: { customerId, date } }),
+    getAll: () => fetchClient(`sales`),
+    getById: (id) => fetchClient(`sales/${id}`),
+    create: (data) => fetchClient(`sales`, { method: 'POST', body: JSON.stringify(data) }),
+    delete: (id) => fetchClient(`sales/${id}`, { method: 'DELETE' }),
+    filter: (customerId, date) => fetchClient(`sales/filter?customerId=${customerId}&date=${date}`)
 };
 
+// Product API
 export const productAPI = {
-    getAll: () => apiClient.get(`/products`),
-    getById: (id) => apiClient.get(`/products/${id}`),
-    create: (data) => apiClient.post(`/products`, data),
-    update: (id, data) => apiClient.put(`/products/${id}`, data),
-    delete: (id) => apiClient.delete(`/products/${id}`),
+    getAll: () => fetchClient(`products`),
+    getById: (id) => fetchClient(`products/${id}`),
+    create: (data) => fetchClient(`products`, { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => fetchClient(`products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => fetchClient(`products/${id}`, { method: 'DELETE' }),
 };
-//export const customerAPI = {
-//    getAll: (pageNumber, pageSize) => apiClient.get(`${API_BASE}/customers`, { params: { pageNumber, pageSize }}),
-//    getById: id => apiClient.get(`${API_BASE}/customers/${id}`),
-//    create: data => apiClient.post(`${API_BASE}/customers`, data),
-//    update: (id, data) => apiClient.put(`${API_BASE}/customers/${id}`, data),
-//    delete: id => apiClient.delete(`${API_BASE}/customers/${id}`)
-//};
-
-//export const salesAPI = {
-//    getAll: () => apiClient.get(`${API_BASE}/Sales`),
-//    getById: id => apiClient.get(`${API_BASE}/Sales/${id}`),
-//    create: data => apiClient.post(`${API_BASE}/Sales`, data),
-//    delete: id => apiClient.delete(`${API_BASE}/Sales/${id}`),
-//    filter: (customerId, date) =>
-//        apiClient.get(`${API_BASE}/Sales/filter`, { params: { customerId, date } })
-//};
-//export const productAPI = {
-//    getAll: () => apiClient.get(`${API_BASE}/products`),
-//    getById: id => apiClient.get(`${API_BASE}/products/${id}`),
-//    create: data => apiClient.post(`${API_BASE}/products`, data),
-//    update: (id, data) => apiClient.put(`${API_BASE}/products/${id}`, data),
-//    delete: id => apiClient.delete(`${API_BASE}/products/${id}`)
-//};

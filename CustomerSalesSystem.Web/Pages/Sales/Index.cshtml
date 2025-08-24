@@ -1,9 +1,13 @@
 ﻿@page
 @model CustomerSalesSystem.Web.Pages.Sales.IndexModel
+@inject CustomerService _customerService;
 @{
     ViewData["Title"] = "Sales";
 }
-
+@{
+    var customers = await _customerService.GetAllAsync(1, 50);
+    IList<CustomerDto> Customers = customers.Items;
+}
 <h2 class="mb-4">Sales List</h2>
 
 <a class="btn btn-primary mb-3" asp-page="@PageNavigation.CreateSale">Create New Sale</a>
@@ -13,9 +17,8 @@
         <div class="row g-3 align-items-center">
             <div class="col-8">
                 <label for="customerId" class="form-label">Customer</label>
-                <select class="form-select" id="customerId" required style="min-width: 200px;">
+                <select class="form-select" id="customerId" asp-items="Customers.Select(x=> new SelectListItem{Text=x.Name,Value=x.Id.ToString()})" style="min-width: 200px;">
                     <option value="">Select customer</option>
-                    <!-- customer options here -->
                 </select>
             </div>
 
@@ -64,65 +67,46 @@
 </table>
 
 
-
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script type="module">
-        import { salesAPI } from '/js/api.js'; 
-        import { customerAPI } from '/js/api.js';
-
+    <script>
         let isFiltering = false;
 
-                   async function loadCustomers() {
-            const pageSize = parseInt(document.getElementById('pageSize').value, 10);
-
-            const res = await customerAPI.getAll(1, pageSize);
-            const select = document.getElementById('customerId');
-
-            // Clear existing options except the default one
-            select.querySelectorAll('option:not([value=""])').forEach(opt => opt.remove());
-
-            // Use res.data.items instead of res.data
-            (res.data.items || []).forEach(c => {
-                const option = document.createElement('option');
-                option.value = c.id;
-                option.textContent = c.name;
-                select.appendChild(option);
-            });
-        }
-
+        // ✅ Load all sales
         async function loadSales() {
-            const response = await salesAPI.getAll();
-            renderSales(response.data);
+            const res = await axios.get(`/Sales/Index?handler=Sales`);
+            renderSales(res.data);
         }
-        document.getElementById('salesFilter').addEventListener('submit', async function (e) {
-            e.preventDefault(); // Use 'e' not 'event'
+
+        // ✅ Filter sales
+        document.getElementById("salesFilter").addEventListener("submit", async function (e) {
+            e.preventDefault();
             isFiltering = true;
-            const customerId = document.getElementById('customerId').value;
-            const date = document.getElementById('saleDate').value;
-            const response = await salesAPI.filter(customerId || null, date || null);
-            console.log("filter response", response);
-            renderSales(response.data);
+
+            const customerId = document.getElementById("customerId").value;
+            const date = document.getElementById("saleDate").value;
+
+            const res = await axios.get(`/Sales/Index?handler=FilterSales`, {
+                params: { customerId: customerId || null, date: date || null }
+            });
+
+            renderSales(res.data);
         });
 
-
-
+        // ✅ Render table
         function renderSales(sales) {
-            const tbody = document.getElementById('salesTableBody');
-            tbody.innerHTML = '';
+            const tbody = document.getElementById("salesTableBody");
+            tbody.innerHTML = "";
 
             if (!sales || sales.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td colspan="5" class="text-center text-danger">No sales found.</td>
-                `;
+                const row = document.createElement("tr");
+                row.innerHTML = `<td colspan="5" class="text-center text-danger">No sales found.</td>`;
                 tbody.appendChild(row);
                 return;
             }
 
             sales.forEach(s => {
-                const row = document.createElement('tr');
+                const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${s.customerName}</td>
                     <td>${s.productName}</td>
@@ -134,19 +118,15 @@
             });
         }
 
-        document.getElementById('clearButton').addEventListener('click', async function (e) {
+        // ✅ Clear button reloads all sales
+        document.getElementById("clearButton").addEventListener("click", async function () {
             isFiltering = false;
-
-            // Reload all sales data
             await loadSales();
         });
-
-        loadCustomers();
+    
+        // Initial load
         if (!isFiltering) {
             loadSales();
         }
-
-          document.getElementById("pageSize").addEventListener("change", loadCustomers);
     </script>
 }
-

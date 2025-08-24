@@ -99,6 +99,9 @@
         </div>
         <button type="submit">Register</button>
     </form>
+    <div class="register-link">
+        If Already Registered? <a asp-page="/Security/Login">Login here</a>
+    </div>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Message))

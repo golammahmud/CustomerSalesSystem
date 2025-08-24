@@ -7,28 +7,35 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddHttpContextAccessor();
-var apiBaseUrl = builder.Configuration["ApiBaseUrls:CustomerSalesApi"];
+var ApiBaseUrl = builder.Configuration["ApiBaseUrls:CustomerSalesApi"];
 
 // Configure HTTP clients
-builder.Services.AddHttpClient("API", client =>
-{
-    client.BaseAddress = new Uri(apiBaseUrl);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-}).AddHttpMessageHandler<TokenRefreshHandler>();
+builder.Services.AddTransient<TokenRefreshHandler>();
 
 builder.Services.AddHttpClient("API", client =>
 {
-    client.BaseAddress = new Uri(apiBaseUrl);
+    client.BaseAddress = new Uri(ApiBaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
+})
+.AddHttpMessageHandler<TokenRefreshHandler>()
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    UseCookies = true,
+    CookieContainer = new System.Net.CookieContainer()
 });
 
-builder.Services.AddTransient<TokenRefreshHandler>();
+
+// Register Services
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<SalesService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<IAssistantService, AssistantService>();
 builder.Services.AddScoped<IFilterQueryFromAIService, FilterQueryFromAIService>();
 builder.Services.AddScoped<IGlobalSearchAndChatService, GlobalSearchAndChatService>();
-builder.Services.AddTransient<AuthService>();
 
 
 // Add services to the container.

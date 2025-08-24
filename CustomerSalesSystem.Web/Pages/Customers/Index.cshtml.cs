@@ -1,15 +1,17 @@
 using CustomerSalesSystem.Application.DTOs;
 using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services;
+using CustomerSalesSystem.Web.Services.Service;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CustomerSalesSystem.Web.Pages.Customers
 {
-    public class IndexModel(IHttpClientFactory httpClientFactory, IFilterQueryFromAIService filterQueryService) : BasePageModel
+    public class IndexModel(IHttpClientFactory httpClientFactory, IFilterQueryFromAIService filterQueryService, CustomerService customerService) : BasePageModel
     {
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IFilterQueryFromAIService _filterQueryService = filterQueryService;
+        private readonly CustomerService _customerService = customerService;
 
         [BindProperty(SupportsGet = true)]
         public string CsSearchQuery { get; set; }= string.Empty;
@@ -109,6 +111,16 @@ namespace CustomerSalesSystem.Web.Pages.Customers
             return Page();
         }
 
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        {
+            if (id <= 0) return BadRequest();
 
+            var result = await _customerService.GetByIdAsync(id);
+            if (result is null) return NotFound();
+
+            await _customerService.DeleteAsync(id);
+
+            return RedirectToPage( PageNavigation.CustomerList);
+        }
     }
 }
