@@ -1,4 +1,6 @@
 using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Domain;
+using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services;
 using CustomerSalesSystem.Web.Services.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +41,7 @@ namespace CustomerSalesSystem.Web.Pages.Customers
             try
             {
                 await _customerService.UpdateAsync(Customer);
+                Toast.Show("Customer has been updated successfully!", ToastType.Success, "Success");
                 return RedirectToPage(PageNavigation.CustomerList); // Redirect to customers list after creation
             }
             catch (Exception ex)

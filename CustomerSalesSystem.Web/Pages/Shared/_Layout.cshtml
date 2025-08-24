@@ -7,7 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/css/site.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
+    @*Toster Notifications *@
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     @inject IHttpContextAccessor HttpContextAccessor
 </head>
 <body>
@@ -116,6 +117,22 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/voicesearch.js" asp-append-version="true"></script>
     @Html.Raw(ViewData["SpeakScript"])
+
+
+    @*Toster Notifications *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script type="module">
+        import { showTempDataToast } from '/js/toaster.js';
+
+        const tempData = {
+            ToastMessage: '@TempData["ToastMessage"]',
+            ToastType: '@TempData["ToastType"]',
+            ToastTitle: '@TempData["ToastTitle"]'
+        };
+
+        showTempDataToast(tempData);
+    </script>
 
     <script>
         $(document).ready(function(){

@@ -1,4 +1,5 @@
 using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Domain;
 using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services;
 using CustomerSalesSystem.Web.Services.Service;
@@ -118,8 +119,10 @@ namespace CustomerSalesSystem.Web.Pages.Customers
             var result = await _customerService.GetByIdAsync(id);
             if (result is null) return NotFound();
 
+
             await _customerService.DeleteAsync(id);
 
+            Toast.Show("Customer has been deleted successfully!", ToastType.Success, "Success");
             return RedirectToPage( PageNavigation.CustomerList);
         }
     }

@@ -1,11 +1,13 @@
 using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Domain;
+using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services.Service;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace CustomerSalesSystem.Web.Pages.Sales
 {
-    public class CreateModel : PageModel
+    public class CreateModel : BasePageModel
     {
         private readonly SalesService _saleService;
 
@@ -37,6 +39,7 @@ namespace CustomerSalesSystem.Web.Pages.Sales
 
             await _saleService.CreateAsync(Sale);
 
+            Toast.Show("Sale created successfully!", ToastType.Success, "Success");
             return RedirectToPage(PageNavigation.SalesList);
         }
     }

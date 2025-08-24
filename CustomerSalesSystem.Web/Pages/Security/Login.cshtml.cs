@@ -1,4 +1,6 @@
 using CustomerSalesSystem.Application.DTOs;
+using CustomerSalesSystem.Domain;
+using CustomerSalesSystem.Web.Helper;
 using CustomerSalesSystem.Web.Services.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -49,6 +51,8 @@ namespace CustomerSalesSystem.Web.Pages.Security
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            Toast.Show("Logged in successfully!", ToastType.Success, "Success");
 
             // Redirect to return URL if provided
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
